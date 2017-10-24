@@ -21,10 +21,9 @@ contract QuantstampSaleMock is QuantstampSale {
         uint minimumContributionInWei,
         uint start,
         uint durationInMinutes,
-        uint rateQspToEther,
         address addressOfTokenUsedAsReward
     ) QuantstampSale(ifSuccessfulSendTo, fundingGoalInEthers, fundingCapInEthers,
-                     minimumContributionInWei, start, durationInMinutes, rateQspToEther,
+                     minimumContributionInWei, start, durationInMinutes,
                      addressOfTokenUsedAsReward){ 
         _now = start + 1;
     }

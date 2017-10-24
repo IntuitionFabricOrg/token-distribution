@@ -37,11 +37,6 @@ contract QuantstampSale is Pausable {
     // Refund amount, should it be required
     uint public refundAmount;
 
-    // The ratio of QSP to Ether
-    uint public rate;
-    uint public constant LOW_RANGE_RATE = 5000;
-    uint public constant HIGH_RANGE_RATE = 10000;
-
     // prevent certain functions from being recursively called
     bool private rentrancy_lock = false;
 
@@ -51,10 +46,18 @@ contract QuantstampSale is Pausable {
     // A map that tracks the amount of wei contributed by address
     mapping(address => uint256) public balanceOf;
 
+    // Maps that maintain information on registered contributors
+    mapping(address=>bool) public registered;
+    mapping(address=>uint) public userCapInWei;
+    mapping(address=>uint) public userRateQspToEther;
+
+
     // Events
     event GoalReached(address _beneficiary, uint _amountRaised);
     event CapReached(address _beneficiary, uint _amountRaised);
     event FundTransfer(address _backer, uint _amount, bool _isContribution);
+    event RegistrationStatusChanged(address target, bool isRegistered, uint capInWei, uint rateQspToEther);
+
 
     // Modifiers
     modifier beforeDeadline()   { require (currentTime() < endTime); _; }
@@ -79,7 +82,6 @@ contract QuantstampSale is Pausable {
      * @param minimumContributionInWei      minimum contribution (in wei)
      * @param start                         the start time (UNIX timestamp)
      * @param durationInMinutes             the duration of the crowdsale in minutes
-     * @param rateQspToEther                the conversion rate from QSP to Ether
      * @param addressOfTokenUsedAsReward    address of the token being sold
      */
     function QuantstampSale(
@@ -89,7 +91,6 @@ contract QuantstampSale is Pausable {
         uint minimumContributionInWei,
         uint start,
         uint durationInMinutes,
-        uint rateQspToEther,
         address addressOfTokenUsedAsReward
     ) {
         require(ifSuccessfulSendTo != address(0) && ifSuccessfulSendTo != address(this));
@@ -102,7 +103,6 @@ contract QuantstampSale is Pausable {
         minContribution = minimumContributionInWei;
         startTime = start;
         endTime = start + durationInMinutes * 1 minutes; // TODO double check
-        setRate(rateQspToEther);
         tokenReward = QuantstampToken(addressOfTokenUsedAsReward);
     }
 
@@ -119,15 +119,22 @@ contract QuantstampSale is Pausable {
     function () payable whenNotPaused beforeDeadline afterStartTime saleNotClosed nonReentrant {
         require(msg.value >= minContribution);
 
-        // Update the sender's balance of wei contributed and the amount raised
         uint amount = msg.value;
         uint currentBalance = balanceOf[msg.sender];
+
+        // ensure that the user adheres to whitelist restrictions
+        require(registered[msg.sender]);
+        require(currentBalance.add(amount) <= userCapInWei[msg.sender]);
+
+
+        // Update the sender's balance of wei contributed and the amount raised
         balanceOf[msg.sender] = currentBalance.add(amount);
         amountRaised = amountRaised.add(amount);
 
         // Compute the number of tokens to be rewarded to the sender
         // Note: it's important for this calculation that both wei
         // and QSP have the same number of decimal places (18)
+        uint rate = userRateQspToEther[msg.sender];
         uint numTokens = amount.mul(rate);
 
         // Transfer the tokens from the crowdsale supply to the sender
@@ -143,21 +150,85 @@ contract QuantstampSale is Pausable {
         }
     }
 
+
+    /**
+     * @dev Changes registration status of an address for participation.
+     * @param target Address that will be registered/deregistered.
+     * @param isRegistered New registration status of address.
+     * @param capInWei The maximum amount of wei that the user can contribute.
+     * @param rateQspToEther The rate at which the user will QSP for Ether contributions.
+     * @param initialContributionInWei The amount of wei contributed before the crowdsale.
+     */
+    function changeRegistrationStatus(address target,
+                                      bool isRegistered,
+                                      uint capInWei,
+                                      uint rateQspToEther,
+                                      uint initialContributionInWei)
+        public
+        onlyOwner
+        //only24HBeforeSale // TODO do we want this?
+    {
+        registered[target] = isRegistered;
+        userCapInWei[target] = capInWei;
+        userRateQspToEther[target] = rateQspToEther;
+        RegistrationStatusChanged(target, isRegistered, capInWei, rateQspToEther);
+
+        if(initialContributionInWei > 0){
+            uint numTokens = initialContributionInWei.mul(rateQspToEther);
+            // if the user somehow already has a balance, don't double-issue tokens
+            numTokens = numTokens.sub(tokenReward.balanceOf(target));
+
+            // Transfer the tokens from the crowdsale supply to the sender
+            if (tokenReward.transferFrom(tokenReward.owner(), target, numTokens)) {
+                // TODO: is this actually a FundTransfer?
+                // FundTransfer(target, initialContributionInWei, true);
+                // Check if the funding goal or cap have been reached
+                checkFundingGoal();
+                checkFundingCap();
+            }
+            else {
+                revert();
+            }
+        }
+    }
+
+
+    /**
+     * @dev Changes registration statuses of addresses for participation.
+     * @param targets Addresses that will be registered/deregistered.
+     * @param isRegistered New registration status of addresses.
+     * @param caps The maximum amount of wei that each user can contribute.
+     * @param rates The rates at which each user will QSP for Ether contributions.
+     * @param initialContributionsInWei The amount of wei contributed by each user before the crowdsale.
+     * TODO: Is there any scenario where we'd have to unregister a user that has an initial balance?
+     * TODO: I'm imagining this is just used once before the sale goes live, and we never have to call again.
+     *       If we would need to periodically update contributions, this would need to change.
+     */
+    function changeRegistrationStatuses(address[] targets,
+                                        bool isRegistered,
+                                        uint[] caps,
+                                        uint[] rates,
+                                        uint[] initialContributionsInWei)
+        public
+        onlyOwner
+        //only24HBeforeSale // TODO do we want this?
+    {
+        // check that all arrays have the same length
+        require(targets.length == caps.length);
+        require(caps.length == rates.length);
+        require(rates.length == initialContributionsInWei.length);
+
+        for (uint i = 0; i < targets.length; i++) {
+            changeRegistrationStatus(targets[i], isRegistered, caps[i], rates[i], initialContributionsInWei[i]);
+        }
+    }
+
+
     /**
      * The owner can terminate the crowdsale at any time.
      */
     function terminate() external onlyOwner {
         saleClosed = true;
-    }
-
-    /**
-     * The owner can update the rate (QSP to ETH).
-     *
-     * @param _rate  the new rate for converting QSP to ETH
-     */
-    function setRate(uint _rate) public onlyOwner {
-        require(_rate >= LOW_RANGE_RATE && _rate <= HIGH_RANGE_RATE);
-        rate = _rate;
     }
 
     /**
@@ -270,4 +341,7 @@ contract QuantstampSale is Pausable {
     function convertToMiniQsp(uint amount) internal constant returns (uint) {
         return amount * (10 ** uint(tokenReward.decimals()));
     }
+
+
+
 }
