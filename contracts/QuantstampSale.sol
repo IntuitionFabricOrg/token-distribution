@@ -174,6 +174,8 @@ contract QuantstampSale is Pausable {
     {
         require(!isRegistered || capInWei > 0);
         require(!isRegistered || rateQspToEther > 0);
+        require(isRegistered  || capInWei == 0);
+        require(isRegistered  || rateQspToEther == 0);
         require(initialContributionInWei <= capInWei);
 
 

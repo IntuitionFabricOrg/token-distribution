@@ -11,6 +11,8 @@ contract('Whitelist Crowdsale', function(accounts) {
     var user2 = accounts[2];
     var user3 = accounts[3];
     var user4 = accounts[4];
+    var user5 = accounts[5];
+    var user6 = accounts[6];
 
     beforeEach(function() {
     return QuantstampSale.deployed().then(function(instance) {
@@ -115,4 +117,66 @@ contract('Whitelist Crowdsale', function(accounts) {
     });
 
 
+    it("should allow multiple users to be added to the whitelist", async function() {
+        var addresses = [user4, user5, user6];
+        var caps = [util.oneEther, util.twoEther, util.threeEther];
+        var rates = [4000, 5000, 6000];
+        var initialContributions = [util.oneEther, util.oneEther, 0];
+
+        await sale.changeRegistrationStatuses(addresses, true, caps, rates, initialContributions, {from:owner});
+
+        await util.expectThrow(sale.sendTransaction({from: user4,  value: util.oneEther}));
+        await sale.sendTransaction({from: user5,  value: util.oneEther});
+        await sale.sendTransaction({from: user6,  value: util.twoEther});
+
+        let saleBalance4 = (await sale.balanceOf(user4)).toNumber();
+        let saleBalance5 = (await sale.balanceOf(user5)).toNumber();
+        let saleBalance6 = (await sale.balanceOf(user6)).toNumber();
+
+        let offchainBalance4 = (await sale.offchainBalanceOf(user4)).toNumber();
+        let offchainBalance5 = (await sale.offchainBalanceOf(user5)).toNumber();
+        let offchainBalance6 = (await sale.offchainBalanceOf(user6)).toNumber();
+
+        let token4 = (await token.balanceOf(user4)).toNumber();
+        let token5 = (await token.balanceOf(user5)).toNumber();
+        let token6 = (await token.balanceOf(user6)).toNumber();
+
+        assert.equal(saleBalance4, 0, "User4 sale balance is wrong");
+        assert.equal(saleBalance5, util.oneEther, "User5 sale balance is wrong");
+        assert.equal(saleBalance6, util.twoEther, "User6 sale balance is wrong");
+
+        assert.equal(offchainBalance4, util.oneEther, "User4 offchain balance is wrong");
+        assert.equal(offchainBalance5, util.oneEther, "User5 offchain balance is wrong");
+        assert.equal(offchainBalance6, 0, "User6 offchain balance is wrong");
+
+        assert.equal(token4, 4000 * util.oneEther, "User4 token balance is wrong");
+        assert.equal(token5, 5000 * util.twoEther, "User4 token balance is wrong");
+        assert.equal(token6, 6000 * util.twoEther, "User4 token balance is wrong");
+    });
+
+    it("should not allow the initial contribution to be higher than the cap", async function() {
+        var addresses = [user4, user5, user6];
+        var caps = [util.oneEther, util.twoEther, util.threeEther];
+        var rates = [4000, 5000, 6000];
+        var initialContributions = [util.twoEther, util.threeEther, 0];
+
+        await util.expectThrow(sale.changeRegistrationStatuses(addresses, true, caps, rates, initialContributions, {from: owner}));
+    });
+
+    it("should not allow different size lists when changing many registration statuses", async function() {
+        var addresses3 = [user4, user5, user6];
+        var caps3 = [util.oneEther, util.twoEther, util.threeEther];
+        var rates3 = [4000, 5000, 6000];
+        var initialContributions3 = [0, 0, 0];
+
+        var addresses2 = [user4, user5];
+        var caps2 = [util.oneEther, util.threeEther];
+        var rates2 = [4000, 5000];
+        var initialContributions2 = [0, 0];
+
+        await util.expectThrow(sale.changeRegistrationStatuses(addresses3, true, caps2, rates2, initialContributions2, {from: owner}));
+        await util.expectThrow(sale.changeRegistrationStatuses(addresses2, true, caps3, rates2, initialContributions2, {from: owner}));
+        await util.expectThrow(sale.changeRegistrationStatuses(addresses2, true, caps2, rates3, initialContributions2, {from: owner}));
+        await util.expectThrow(sale.changeRegistrationStatuses(addresses2, true, caps2, rates2, initialContributions3, {from: owner}));
+    });
 });
