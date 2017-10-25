@@ -46,6 +46,10 @@ contract QuantstampSale is Pausable {
     // A map that tracks the amount of wei contributed by address
     mapping(address => uint256) public balanceOf;
 
+    // A map that tracks contributions that occurred off the blockchain.
+    // This is tracked during whitelist registration.
+    mapping(address => uint256) public offchainBalanceOf;
+
     // Maps that maintain information on registered contributors
     mapping(address=>bool) public registered;
     mapping(address=>uint) public userCapInWei;
@@ -120,15 +124,15 @@ contract QuantstampSale is Pausable {
         require(msg.value >= minContribution);
 
         uint amount = msg.value;
-        uint currentBalance = balanceOf[msg.sender];
+        uint totalBalance = balanceOf[msg.sender].add(offchainBalanceOf[msg.sender]);
 
         // ensure that the user adheres to whitelist restrictions
         require(registered[msg.sender]);
-        require(currentBalance.add(amount) <= userCapInWei[msg.sender]);
+        require(totalBalance.add(amount) <= userCapInWei[msg.sender]);
 
 
         // Update the sender's balance of wei contributed and the amount raised
-        balanceOf[msg.sender] = currentBalance.add(amount);
+        balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
         amountRaised = amountRaised.add(amount);
 
         // Compute the number of tokens to be rewarded to the sender
@@ -168,12 +172,18 @@ contract QuantstampSale is Pausable {
         onlyOwner
         //only24HBeforeSale // TODO do we want this?
     {
+        require(!isRegistered || capInWei > 0);
+        require(!isRegistered || rateQspToEther > 0);
+        require(initialContributionInWei <= capInWei);
+
+
         registered[target] = isRegistered;
         userCapInWei[target] = capInWei;
         userRateQspToEther[target] = rateQspToEther;
         RegistrationStatusChanged(target, isRegistered, capInWei, rateQspToEther);
 
         if(initialContributionInWei > 0){
+            offchainBalanceOf[target] = initialContributionInWei;
             uint numTokens = initialContributionInWei.mul(rateQspToEther);
             // if the user somehow already has a balance, don't double-issue tokens
             numTokens = numTokens.sub(tokenReward.balanceOf(target));

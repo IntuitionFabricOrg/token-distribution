@@ -2,15 +2,17 @@
 
 var QuantstampSale = artifacts.require("./QuantstampSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
+var util = require("./util.js");
+
 
 contract('QSP-11: Owner withdrawal', function(accounts) {
-  // account[0] points to the owner on the testRPC setup
-  var owner = accounts[0];
-  var user1 = accounts[1];
-  var user2 = accounts[2];
-  var user3 = accounts[3];
+    // account[0] points to the owner on the testRPC setup
+    var owner = accounts[0];
+    var user1 = accounts[1];
+    var user2 = accounts[2];
+    var user3 = accounts[3];
 
-  beforeEach(function() {
+    beforeEach(function() {
     return QuantstampSale.deployed().then(function(instance) {
         sale = instance;
         return QuantstampToken.deployed();
@@ -18,37 +20,34 @@ contract('QSP-11: Owner withdrawal', function(accounts) {
       token = instance2;
       return token.INITIAL_SUPPLY();
     });
-  });
+    });
 
-  it("owner should not be able to withdraw funds if the funding goal has not been reached", async function() {
-    await token.setCrowdsale(sale.address, 0);
-    let fundingGoal = (await sale.fundingGoal()).toNumber();
+    it("owner should not be able to withdraw funds if the funding goal has not been reached", async function() {
+        await token.setCrowdsale(sale.address, 0);
+        let fundingGoal = (await sale.fundingGoal()).toNumber();
 
-    let amountRaised = (await sale.amountRaised()).toNumber();
-    let fundingGoalReached = await sale.fundingGoalReached();
+        let amountRaised = (await sale.amountRaised()).toNumber();
+        let fundingGoalReached = await sale.fundingGoalReached();
 
-    assert.equal(fundingGoalReached, false);
-    assert.equal(amountRaised < fundingGoal, true);
+        assert.equal(fundingGoalReached, false);
+        assert.equal(amountRaised < fundingGoal, true);
 
-    let beneficiary = await sale.beneficiary();
+        let beneficiary = await sale.beneficiary();
 
-    // can owner can withdraw funds?
-    try {
-      await sale.ownerSafeWithdrawal();
-    }
-    catch (e) {
-      return true;
-    }
-
-    throw new Error("the owner was able to withdraw funds before the funding goal was reached")
-  });
+        // can owner can withdraw funds?
+        util.expectThrow(sale.ownerSafeWithdrawal());
+    });
 
   it("owner should be able to withdraw funds once funding goal is reached", async function() {
     await token.setCrowdsale(sale.address, 0);
-    let fundingGoal = (await sale.fundingGoal()).toNumber();
+    await sale.changeRegistrationStatus(user2, true, util.hundredEther, 5000, 0, {from:owner});
 
+    let fundingGoal = (await sale.fundingGoal()).toNumber();
+    console.log(fundingGoal);
+    util.logEthBalances(token, sale, accounts);
     // this send cause the funding goal to be reached
-    await sale.send(fundingGoal);
+    await sale.sendTransaction({value:fundingGoal, from:user2});
+    console.log(fundingGoal);
 
     let amountRaised = (await sale.amountRaised()).toNumber();
     let fundingGoalReached = await sale.fundingGoalReached();

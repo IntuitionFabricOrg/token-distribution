@@ -3,36 +3,6 @@ var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 
 var bigInt = require("big-integer");
 
-
-async function logUserBalances (token, accounts) {
- console.log("")
- console.log("User Balances:")
- console.log("--------------")
- console.log(`Owner: ${(await token.balanceOf(accounts[0])).toNumber()}`)
- console.log(`User1: ${(await token.balanceOf(accounts[1])).toNumber()}`)
- console.log(`User2: ${(await token.balanceOf(accounts[2])).toNumber()}`)
- console.log(`User3: ${(await token.balanceOf(accounts[3])).toNumber()}`)
-
- console.log("--------------")
- console.log("")
-}
-
-async function logEthBalances (token, sale, accounts) {
- console.log("")
- console.log("Eth Balances:")
- console.log("-------------")
- console.log(`Owner: ${(await web3.eth.getBalance(accounts[0])).toNumber()}`)
- console.log(`User1: ${(await web3.eth.getBalance(accounts[1])).toNumber()}`)
- console.log(`User2: ${(await web3.eth.getBalance(accounts[2])).toNumber()}`)
- console.log(`User3: ${(await web3.eth.getBalance(accounts[3])).toNumber()}`)
- console.log(`Sale : ${(await web3.eth.getBalance(sale.address)).toNumber()}`)
- console.log(`Token: ${(await web3.eth.getBalance(token.address)).toNumber()}`)
-
-
- console.log("--------------")
- console.log("")
-}
-
 contract('QuantstampSale Constructor', function(accounts) {
   // account[0] points to the owner on the testRPC setup
   var owner = accounts[0];
@@ -71,14 +41,12 @@ contract('QuantstampSale Constructor', function(accounts) {
     let minimumContributionInWei  = (await sale.minContribution()).toNumber();
     let start                     = (await sale.startTime()).toNumber();
     let end                       = (await sale.endTime()).toNumber();
-    let rateQspToEther            = (await sale.rate()).toNumber();
 
     assert.equal(ifSuccessfulSendTo, beneficiary, "beneficiary address is incorrect");
     assert.equal(fundingGoalInEthers, 10 * (10 ** 18), "funding goal is incorrect");
     assert.equal(fundingCapInEthers, 20 * (10 ** 18), "funding cap is incorrect");
     assert.equal(minimumContributionInWei, 1, "minimum contribution in wei is incorrect");
     assert.equal(start + 120, end, "end time should be 120 seconds after start time");
-    assert.equal(rateQspToEther, 5000, "conversion rate from QSP to ETH is incorrect");
   });
 
 });

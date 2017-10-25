@@ -4,34 +4,6 @@ var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 var bigInt = require("big-integer");
 
 
-async function logUserBalances (token, accounts) {
- console.log("")
- console.log("User Balances:")
- console.log("--------------")
- console.log(`Owner: ${(await token.balanceOf(accounts[0])).toNumber()}`)
- console.log(`User1: ${(await token.balanceOf(accounts[1])).toNumber()}`)
- console.log(`User2: ${(await token.balanceOf(accounts[2])).toNumber()}`)
- console.log(`User3: ${(await token.balanceOf(accounts[3])).toNumber()}`)
-
- console.log("--------------")
- console.log("")
-}
-
-async function logEthBalances (token, sale, accounts) {
- console.log("")
- console.log("Eth Balances:")
- console.log("-------------")
- console.log(`Owner: ${(await web3.eth.getBalance(accounts[0])).toNumber()}`)
- console.log(`User1: ${(await web3.eth.getBalance(accounts[1])).toNumber()}`)
- console.log(`User2: ${(await web3.eth.getBalance(accounts[2])).toNumber()}`)
- console.log(`User3: ${(await web3.eth.getBalance(accounts[3])).toNumber()}`)
- console.log(`Sale : ${(await web3.eth.getBalance(sale.address)).toNumber()}`)
- console.log(`Token: ${(await web3.eth.getBalance(token.address)).toNumber()}`)
-
-
- console.log("--------------")
- console.log("")
-}
 
 contract('QuantstampSale.terminate()', function(accounts) {
   // account[0] points to the owner on the testRPC setup
