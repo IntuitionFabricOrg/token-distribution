@@ -34,6 +34,9 @@ contract QuantstampSale is Pausable {
     // Keeps track of the amount of wei raised
     uint public amountRaised;
 
+    // Keeps track of the offchain amount of wei raised
+    uint public offchainAmountRaised;
+
     // Refund amount, should it be required
     uint public refundAmount;
 
@@ -124,12 +127,11 @@ contract QuantstampSale is Pausable {
         require(msg.value >= minContribution);
 
         uint amount = msg.value;
-        uint totalBalance = balanceOf[msg.sender].add(offchainBalanceOf[msg.sender]);
+        uint currentBalanceOfSender = balanceOf[msg.sender].add(offchainBalanceOf[msg.sender]);
 
         // ensure that the user adheres to whitelist restrictions
         require(registered[msg.sender]);
-        require(totalBalance.add(amount) <= userCapInWei[msg.sender]);
-
+        require(currentBalanceOfSender.add(amount) <= userCapInWei[msg.sender]);
 
         // Update the sender's balance of wei contributed and the amount raised
         balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
@@ -155,40 +157,42 @@ contract QuantstampSale is Pausable {
     }
 
 
+
+
     /**
      * @dev Changes registration status of an address for participation.
+     *
+     * TODO: edge case: register -> deregister -> register is problematic, don't do it for now
+     *
      * @param target Address that will be registered/deregistered.
-     * @param isRegistered New registration status of address.
      * @param capInWei The maximum amount of wei that the user can contribute.
      * @param rateQspToEther The rate at which the user will QSP for Ether contributions.
      * @param initialContributionInWei The amount of wei contributed before the crowdsale.
      */
-    function changeRegistrationStatus(address target,
-                                      bool isRegistered,
-                                      uint capInWei,
-                                      uint rateQspToEther,
-                                      uint initialContributionInWei)
+    function registerUser(address target,
+                          uint capInWei,
+                          uint rateQspToEther,
+                          uint initialContributionInWei)
         public
         onlyOwner
         //only24HBeforeSale // TODO do we want this?
     {
-        require(!isRegistered || capInWei > 0);
-        require(!isRegistered || rateQspToEther > 0);
-        require(isRegistered  || capInWei == 0);
-        require(isRegistered  || rateQspToEther == 0);
+        require(!registered[target]);
+        require(capInWei > 0);
+        require(rateQspToEther > 0);
         require(initialContributionInWei <= capInWei);
 
-
-        registered[target] = isRegistered;
+        registered[target] = true;
         userCapInWei[target] = capInWei;
         userRateQspToEther[target] = rateQspToEther;
-        RegistrationStatusChanged(target, isRegistered, capInWei, rateQspToEther);
+        RegistrationStatusChanged(target, true, capInWei, rateQspToEther);
 
         if(initialContributionInWei > 0){
+            offchainAmountRaised = offchainAmountRaised.add(initialContributionInWei);
             offchainBalanceOf[target] = initialContributionInWei;
             uint numTokens = initialContributionInWei.mul(rateQspToEther);
             // if the user somehow already has a balance, don't double-issue tokens
-            numTokens = numTokens.sub(tokenReward.balanceOf(target));
+            //numTokens = numTokens.sub(tokenReward.balanceOf(target));
 
             // Transfer the tokens from the crowdsale supply to the sender
             if (tokenReward.transferFrom(tokenReward.owner(), target, numTokens)) {
@@ -204,11 +208,25 @@ contract QuantstampSale is Pausable {
         }
     }
 
+    /**
+     * @dev Remove registration status of an address for participation.
+     *
+     * NOTE: if the user made initial contributions to the crowdsale,
+     *       this cannot return the previously allotted tokens.
+     *
+     * @param target Address to be unregistered.
+     */
+    function unregisterUser(address target) public onlyOwner {
+        require(registered[target]);
+        registered[target] = false;
+        userCapInWei[target] = 0;
+        userRateQspToEther[target] = 0;
+        RegistrationStatusChanged(target, false, 0, 0);
+    }
 
     /**
      * @dev Changes registration statuses of addresses for participation.
      * @param targets Addresses that will be registered/deregistered.
-     * @param isRegistered New registration status of addresses.
      * @param caps The maximum amount of wei that each user can contribute.
      * @param rates The rates at which each user will QSP for Ether contributions.
      * @param initialContributionsInWei The amount of wei contributed by each user before the crowdsale.
@@ -216,11 +234,10 @@ contract QuantstampSale is Pausable {
      * TODO: I'm imagining this is just used once before the sale goes live, and we never have to call again.
      *       If we would need to periodically update contributions, this would need to change.
      */
-    function changeRegistrationStatuses(address[] targets,
-                                        bool isRegistered,
-                                        uint[] caps,
-                                        uint[] rates,
-                                        uint[] initialContributionsInWei)
+    function registerUsers(address[] targets,
+                           uint[] caps,
+                           uint[] rates,
+                           uint[] initialContributionsInWei)
         public
         onlyOwner
         //only24HBeforeSale // TODO do we want this?
@@ -231,7 +248,7 @@ contract QuantstampSale is Pausable {
         require(rates.length == initialContributionsInWei.length);
 
         for (uint i = 0; i < targets.length; i++) {
-            changeRegistrationStatus(targets[i], isRegistered, caps[i], rates[i], initialContributionsInWei[i]);
+            registerUser(targets[i], caps[i], rates[i], initialContributionsInWei[i]);
         }
     }
 
