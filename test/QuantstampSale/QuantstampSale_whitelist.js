@@ -3,6 +3,22 @@ var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 
 var bigInt = require("big-integer");
 
+var expectThrow = async function(promise) {
+  try {
+    await promise;
+  } catch (error) {
+    const invalidOpcode = error.message.search('invalid opcode') >= 0;
+    const invalidJump = error.message.search('invalid JUMP') >= 0;
+    const outOfGas = error.message.search('out of gas') >= 0;
+    assert(
+      invalidOpcode || invalidJump || outOfGas,
+      "Expected throw, got '" + error + "' instead",
+    );
+    return;
+  }
+  assert.fail('Expected throw not received');
+};
+
 
 async function logUserBalances (token, accounts) {
  console.log("");
@@ -80,6 +96,39 @@ contract('Whitelist Crowdsale', function(accounts) {
 		assert.equal(r.logs[0].event, 'RegistrationStatusChanged', "event is wrong");
 		assert.equal(r.logs[0].args.target, user2, "target is wrong");
 		assert.equal(r.logs[0].args.isRegistered, false, "isRegistered is wrong");
+    });
+
+    it("should allow user2 to buy tokens up to their limit", async function() {
+        // 0 indicates all crowdsale tokens
+        await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
+
+        var oneEther = 1;
+        var amountWei1 = web3.toWei(oneEther, "ether");
+        var twoEther = 2;
+        var amountWei2 = web3.toWei(twoEther, "ether");
+
+
+        var r = await sale.changeRegistrationStatus(user2, true, amountWei2, 5000, 0, {from:owner});
+
+        let user2Balance = (await token.balanceOf(user2)).toNumber();
+        logEthBalances(token, sale, accounts);
+        logUserBalances(token, accounts);
+        await sale.sendTransaction({from: user2,  value: amountWei1});
+        let user2BalanceAfter1 = (await token.balanceOf(user2)).toNumber();
+        logEthBalances(token, sale, accounts);
+        logUserBalances(token, accounts);
+
+        assert.equal(user2Balance + amountWei1 * 5000, user2BalanceAfter1, "token balance of user is incorrect");
+        await sale.sendTransaction({from: user2,  value: amountWei1});
+
+        let user2BalanceAfter2 = (await token.balanceOf(user2)).toNumber();
+        logEthBalances(token, sale, accounts);
+        logUserBalances(token, accounts);
+
+        assert.equal(user2Balance + amountWei2 * 5000, user2BalanceAfter2, "token balance of user is incorrect");
+
+        // should now fail
+        await expectThrow(sale.sendTransaction({from: user2,  value: amountWei1}));
     });
 
 });
