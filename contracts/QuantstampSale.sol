@@ -55,15 +55,15 @@ contract QuantstampSale is Pausable {
 
     // Maps that maintain information on registered contributors
     mapping(address=>bool) public registered;
-    mapping(address=>uint) public userCapInWei;
-    mapping(address=>uint) public userRateQspToEther;
+    mapping(address=>uint[]) public tierCaps;
+    mapping(address=>uint[]) public tierRates;
 
 
     // Events
     event GoalReached(address _beneficiary, uint _amountRaised);
     event CapReached(address _beneficiary, uint _amountRaised);
     event FundTransfer(address _backer, uint _amount, bool _isContribution);
-    event RegistrationStatusChanged(address target, bool isRegistered, uint capInWei, uint rateQspToEther);
+    event RegistrationStatusChanged(address target, bool isRegistered, uint[] capInWei, uint[] rateQspToEther);
 
 
     // Modifiers
@@ -131,17 +131,13 @@ contract QuantstampSale is Pausable {
 
         // ensure that the user adheres to whitelist restrictions
         require(registered[msg.sender]);
-        require(currentBalanceOfSender.add(amount) <= userCapInWei[msg.sender]);
 
-        // Update the sender's balance of wei contributed and the amount raised
+        uint numTokens = computeTokenAmount(msg.sender, currentBalanceOfSender, amount);
+        assert(numTokens > 0);
+
+        // Update the sender's balance of wei contributed and the total amount raised
         balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
         amountRaised = amountRaised.add(amount);
-
-        // Compute the number of tokens to be rewarded to the sender
-        // Note: it's important for this calculation that both wei
-        // and QSP have the same number of decimal places (18)
-        uint rate = userRateQspToEther[msg.sender];
-        uint numTokens = amount.mul(rate);
 
         // Transfer the tokens from the crowdsale supply to the sender
         if (tokenReward.transferFrom(tokenReward.owner(), msg.sender, numTokens)) {
@@ -156,43 +152,123 @@ contract QuantstampSale is Pausable {
         }
     }
 
+    /**
+    * Computes the amount of QSP that should be issued for the given transaction.
+    * Contribution tiers are filled up in the order of their associated arrays.
+    *
+    * Example: Assume a user has 3 tiers with caps of [1 eth, 2 eth, 3 eth],
+    *          with respective QSP rates of [4000, 5000, 6000],
+    *          a currentBalance of 1.5 eth, and wants to contribute 0.75 more eth.
+    *
+    *          Their total contribution cap is 1 + 2 + 3 = 6 eth.
+    *          Their current token balance (before this transaction) should be:
+    *            4000*1 + 5000*0.5 = 6500 QSP.
+    *          They will gain 5000*0.5 + 6000*0.25 = 4000 QSP from this transaction.
+    *          Their new total balance will be 10500 QSP having contributed 2.25 eth.
+    *          They must contribute 0.75 more eth before reaching their third tier.
+    *
+    */
+    function computeTokenAmount(address addr, uint currentBalance, uint amount) internal
+        returns (uint){
+        uint[] storage rates = tierRates[addr];  // the rates associated with each tier of the user
+        uint[] storage caps  = tierCaps[addr];  // the caps associated with each tier of the user
+        uint remainingCapOnCurrentTier = 0;  // variable for handling partially-filled tiers
+        uint numTokens = 0;  // the amount of new tokens to issue to addr
+        for(uint i = 0; i < caps.length; i++){
+            if(amount == 0){
+                break;
+            }
+            if(caps[i] > currentBalance){
+                remainingCapOnCurrentTier = caps[i];
+                if(currentBalance > 0){
+                    // if the user has already filled up part of this tier
+                    // modify the current cap to only include the remaining space on this tier
+                    remainingCapOnCurrentTier = remainingCapOnCurrentTier.sub(currentBalance);
+                    currentBalance = 0;
+                }
+                if(amount >= remainingCapOnCurrentTier){
+                    // add tokens for the entire remaining cap on this tier
+                    numTokens = numTokens.add(remainingCapOnCurrentTier.mul(rates[i]));
+                    amount = amount.sub(remainingCapOnCurrentTier);
+                }
+                else{
+                    // add tokens for the remaining amount
+                    numTokens = numTokens.add(amount.mul(rates[i]));
+                    amount = 0;
+                }
+            }
+            else{
+                // update the currentBalance (local) variable to "consume" the cap
+                currentBalance = currentBalance.sub(caps[i]);
+            }
+        }
+        if(amount > 0){
+            // the amount sent by the user is above their total cap
+            revert();
+        }
+        return numTokens;
+    }
 
+
+
+    /**
+     * @dev Sanity checks for registration parameters.
+     *
+     * @param target Address that will be registered/deregistered.
+     * @param capsInWei The maximum amount of wei that the user can contribute in each tier.
+     * @param ratesQspToEther The rates at which the user will QSP for Ether contributions.
+     * @param initialContributionInWei The amount of wei contributed before the crowdsale.
+     */
+    modifier validRegistration(address target,
+                               uint[] capsInWei,
+                               uint[] ratesQspToEther,
+                               uint initialContributionInWei) {
+        require(!registered[target]);
+        require(capsInWei.length == ratesQspToEther.length);
+        uint totalCap = 0;
+        for(uint i = 0; i < capsInWei.length; i++){
+            require(capsInWei[i] > 0);
+            totalCap = totalCap.add(capsInWei[i]);
+            require(ratesQspToEther[i] > 0); // we know rates has the same length as caps
+        }
+        require(initialContributionInWei <= totalCap);
+        _;
+    }
 
 
     /**
      * @dev Changes registration status of an address for participation.
      *
-     * TODO: edge case: register -> deregister -> register is problematic, don't do it for now
+     * NOTE: edge case: register -> deregister -> register can be problematic, don't do it for now
      *
      * @param target Address that will be registered/deregistered.
-     * @param capInWei The maximum amount of wei that the user can contribute.
-     * @param rateQspToEther The rate at which the user will QSP for Ether contributions.
+     * @param capsInWei The maximum amount of wei that the user can contribute in each tier.
+     * @param ratesQspToEther The rates at which the user will QSP for Ether contributions.
      * @param initialContributionInWei The amount of wei contributed before the crowdsale.
      */
     function registerUser(address target,
-                          uint capInWei,
-                          uint rateQspToEther,
+                          uint[] capsInWei,
+                          uint[] ratesQspToEther,
                           uint initialContributionInWei)
         public
         onlyOwner
+        validRegistration(target, capsInWei, ratesQspToEther, initialContributionInWei)
         //only24HBeforeSale // TODO do we want this?
     {
-        require(!registered[target]);
-        require(capInWei > 0);
-        require(rateQspToEther > 0);
-        require(initialContributionInWei <= capInWei);
-
         registered[target] = true;
-        userCapInWei[target] = capInWei;
-        userRateQspToEther[target] = rateQspToEther;
-        RegistrationStatusChanged(target, true, capInWei, rateQspToEther);
+        tierCaps[target] = capsInWei;
+        tierRates[target] = ratesQspToEther;
+        RegistrationStatusChanged(target, true, capsInWei, ratesQspToEther);
 
         if(initialContributionInWei > 0){
             offchainAmountRaised = offchainAmountRaised.add(initialContributionInWei);
             offchainBalanceOf[target] = initialContributionInWei;
-            uint numTokens = initialContributionInWei.mul(rateQspToEther);
-            // if the user somehow already has a balance, don't double-issue tokens
-            //numTokens = numTokens.sub(tokenReward.balanceOf(target));
+
+            // tokenReward.balanceOf(target) should always be zero,
+            // unless a user is registered with a non-zero contribution, unregistered, and re-registered
+            uint numTokens = computeTokenAmount(target,
+                                                tokenReward.balanceOf(target),
+                                                initialContributionInWei);
 
             // Transfer the tokens from the crowdsale supply to the sender
             if (tokenReward.transferFrom(tokenReward.owner(), target, numTokens)) {
@@ -219,9 +295,9 @@ contract QuantstampSale is Pausable {
     function unregisterUser(address target) public onlyOwner {
         require(registered[target]);
         registered[target] = false;
-        userCapInWei[target] = 0;
-        userRateQspToEther[target] = 0;
-        RegistrationStatusChanged(target, false, 0, 0);
+        delete tierCaps[target];
+        delete tierRates[target];
+        RegistrationStatusChanged(target, false, tierCaps[target], tierRates[target]);
     }
 
     /**
@@ -231,12 +307,11 @@ contract QuantstampSale is Pausable {
      * @param rates The rates at which each user will QSP for Ether contributions.
      * @param initialContributionsInWei The amount of wei contributed by each user before the crowdsale.
      * TODO: Is there any scenario where we'd have to unregister a user that has an initial balance?
-     * TODO: I'm imagining this is just used once before the sale goes live, and we never have to call again.
      *       If we would need to periodically update contributions, this would need to change.
-     */
+
     function registerUsers(address[] targets,
-                           uint[] caps,
-                           uint[] rates,
+                           uint[][] caps,
+                           uint[][] rates,
                            uint[] initialContributionsInWei)
         public
         onlyOwner
@@ -251,7 +326,7 @@ contract QuantstampSale is Pausable {
             registerUser(targets[i], caps[i], rates[i], initialContributionsInWei[i]);
         }
     }
-
+    */
 
     /**
      * The owner can terminate the crowdsale at any time.

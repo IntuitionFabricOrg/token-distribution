@@ -71,7 +71,6 @@ contract('Whitelist Crowdsale', function(accounts) {
 
         let user2BalanceAfter2 = (await token.balanceOf(user2)).toNumber();
 
-
         assert.equal(user2Balance + util.twoEther * 5000, user2BalanceAfter2, "token balance of user is incorrect");
 
         // should now fail
@@ -99,7 +98,6 @@ contract('Whitelist Crowdsale', function(accounts) {
 
         assert.equal(saleBalance, 0, "the initial sale balanceOf the user should be 0");
         assert.equal(saleBalance2, util.oneEther, "the sale balanceOf the user after one transfer should be 1 ether");
-
 
         await sale.sendTransaction({from: user3,  value: util.oneEther});
 
