@@ -27,6 +27,20 @@ contract('QuantstampToken (Basic Tests)', function(accounts) {
     assert.equal(decimals, 18);
   });
 
+  it("should ensure that the owner of a newly created token is not also the admin", async function() {
+    await QuantstampToken.new(user1, {from: owner});
+    await util.expectThrow(QuantstampToken.new(owner, {from: owner}));
+  });
+
+    it("should allow crowdsales to be set under the allowance limit", async function() {
+        let crowdsale_allowance = new bigInt(await token.CROWDSALE_ALLOWANCE.call());
+        await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
+        await token.setCrowdsale(sale.address, 10000000000); // ensures crowdsale has allowance of tokens
+        await token.setCrowdsale(sale.address, 10000000000); // ensures crowdsale has allowance of tokens
+        await util.expectThrow(token.setCrowdsale(sale.address, crowdsale_allowance.add(1)));
+    });
+
+
   it("transferEnabled is initialized to false", async function() {
     var result = await token.transferEnabled();
     assert.equal(result, false);
@@ -39,16 +53,19 @@ contract('QuantstampToken (Basic Tests)', function(accounts) {
       assert.equal(ownerBalance, bigInt("1e27"), "the owner balance should initially be 1 billion tokens");
   });
 
-  it("should not allow a regular user to transfer before they are enabled", async function() {
-      await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
-      try{
-        await token.transfer(user2, 10, {from: user1});
-      }
-      catch (e){
+    it("should not allow a regular user to transfer before they are enabled", async function() {
+        await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
+
+        await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
+        await sale.sendTransaction({from:user2, value:util.twoEther});
+        try{
+            await token.transfer(user2, 10, {from: user1});
+        }
+        catch (e){
         return true;
-      }
-      throw new Error("a regular user transferred before they were enabled")
-  });
+        }
+        throw new Error("a regular user transferred before they were enabled")
+    });
     /*
   it("should allow the deployer (owner) of the token to make transfers", async function() {
 
@@ -89,6 +106,30 @@ contract('QuantstampToken (Basic Tests)', function(accounts) {
       assert(isEnabledAfter, "transfers should be enabled");
   });
 
+    it("should allow a regular user to make valid transfers after being enabled", async function() {
+    //await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
+        await token.transfer(user3, 5000 * util.oneEther, {from: user2});
+        //await token.transfer(user3, 5000 * util.oneEther, {from: user2});
+
+        await util.expectThrow(token.transfer(user3, 5001 * util.oneEther, {from: user2}));
+
+        await token.transfer(user3, 2500 * util.oneEther, {from: user2});
+
+        await util.expectThrow(token.transfer(sale.address, 1 * util.oneEther, {from: user2}));
+        await util.expectThrow(token.transfer(0x0, 1 * util.oneEther, {from: user2}));
+        await util.expectThrow(token.transfer(owner, 1 * util.oneEther, {from: user2}));
+        await util.expectThrow(token.transfer(user1, 1 * util.oneEther, {from: user2})); // admin
+        await util.expectThrow(token.transfer(token.address, 1 * util.oneEther, {from: user2}));
+        await util.expectThrow(token.transferFrom(user3, user1, 1 * util.oneEther, {from: user2}));
+
+    });
+
+
+    it("should not allow any crowdsales after transfers have been enabled", async function() {
+        var time = new Date().getTime() / 1000;
+        var sale2 = await QuantstampSale.new(accounts[1], 10, 20, 1, time, 2, token.address);
+        await util.expectThrow(token.setCrowdsale(sale2.address, 0));
+    });
 });
 
 contract('QuantstampToken (token burning tests)', function(accounts) {

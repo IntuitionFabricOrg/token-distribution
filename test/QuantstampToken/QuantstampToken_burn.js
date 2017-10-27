@@ -3,6 +3,7 @@
 var bigInt = require("big-integer");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var util = require("../util.js");
 
 contract('QuantstampToken.burn', function(accounts) {
     // account[0] points to the owner on the testRPC setup
@@ -40,6 +41,7 @@ contract('QuantstampToken.burn', function(accounts) {
 
         await token.transferFrom(owner, burner, 1, {from: admin});
         let burnerBalance = await token.balanceOf(burner);
+        await util.expectThrow(token.burn(1, {from: burner}));
         //assert.equal(burnerBalance);
 
         // Send a token to the burner
