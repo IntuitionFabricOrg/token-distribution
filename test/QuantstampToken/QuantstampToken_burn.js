@@ -24,14 +24,15 @@ contract('QuantstampToken.burn', function(accounts) {
         });
     });
 
-    it("should not be able to burn tokens when transfers are not enabled", async function() {
-        try {
-            await token.burn(1);
-        }
-        catch (e) {
-            return true;
-        }
-        throw new Error("burn was called when transfers were not enabled");
+    it("owner should be able to burn tokens when transfers are not enabled", async function() {
+        let oldOwnerBalance = await token.balanceOf(owner);
+        let oldTotalSupply = await token.totalSupply();
+        await token.burn(1, {from: owner});
+        let newTotalSupply = await token.totalSupply();
+        let newOwnerBalance = await token.balanceOf(owner);
+
+        assert.equal(oldTotalSupply.minus(newTotalSupply), 1);
+        assert.equal(oldOwnerBalance.minus(newOwnerBalance), 1);
     });
 
     it("should burn a token from total supply (by regular user)", async function() {

@@ -33,7 +33,8 @@ contract('Multiple Crowdsales', function(accounts) {
     it("should accept 2 ether for the crowdsale", async function() {
         // 0 indicates all crowdsale tokens
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
-        await sale.changeRegistrationStatus(user2, true, util.hundredEther, 5000, 0, {from:owner});
+        await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
+
         let allowance = (await token.allowance(tokenOwner, sale.address));
 
         await sale.sendTransaction({from: user2,  value: util.twoEther});
@@ -98,7 +99,7 @@ contract('Multiple Crowdsales', function(accounts) {
         let allowance = (await token.allowance(tokenOwner, sale2.address));
 
         let user2Balance = (await token.balanceOf(user2)).toNumber();
-        await sale2.changeRegistrationStatus(user2, true, util.hundredEther, 6000, 0, {from:owner});
+        await sale2.registerUser(user2, [util.hundredEther], [6000], 0, {from:owner});
 
         await sale2.sendTransaction({from: user2,  value: util.twoEther});
 

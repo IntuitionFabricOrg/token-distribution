@@ -36,7 +36,7 @@ contract('Missed-deadline Crowdsale', function(accounts) {
     it("should accept 2 ether for the crowdsale", async function() {
         // 0 indicates all crowdsale tokens
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
-        await sale.changeRegistrationStatus(user2, true, util.twoEther, 5000, 0, {from:owner});
+        await sale.registerUser(user2, [util.twoEther], [5000], 0, {from:owner});
 
         let allowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
 
@@ -58,7 +58,8 @@ contract('Missed-deadline Crowdsale', function(accounts) {
 
         let sale2 = await QuantstampSaleMock.new(accounts[1], 10, 20, 1, time, 2, token.address);
         await token.setCrowdsale(sale2.address, 0); // ensures crowdsale has allowance of tokens
-        await sale2.changeRegistrationStatus(user2, true, util.twoEther, 5000, 0, {from:owner});
+        await sale2.registerUser(user2, [util.twoEther], [5000], 0, {from:owner});
+
         let nowtest = await sale2._now();
 
         let currentTime = (await sale2.currentTime());

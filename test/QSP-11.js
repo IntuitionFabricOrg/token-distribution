@@ -40,7 +40,7 @@ contract('QSP-11: Owner withdrawal', function(accounts) {
 
   it("owner should be able to withdraw funds once funding goal is reached", async function() {
     await token.setCrowdsale(sale.address, 0);
-    await sale.changeRegistrationStatus(user2, true, util.hundredEther, 5000, 0, {from:owner});
+    await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
 
     let fundingGoal = (await sale.fundingGoal()).toNumber();
     console.log(fundingGoal);

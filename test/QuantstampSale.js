@@ -1,7 +1,7 @@
 
 var QuantstampSale = artifacts.require("./QuantstampSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
-
+/*
 contract('QuantstampSale constructor', function(accounts) {
   // account[0] points to the owner on the testRPC setup
   var owner = accounts[0];
@@ -75,7 +75,8 @@ contract('Multiple Crowdsales', function(accounts) {
       let crowdSaleAllowance = (await token.crowdSaleSupply()).toNumber();
       await token.setCrowdsale(sale.address, crowdSaleAllowance); // ensures crowdsale has allowance of tokens
       let tokenOwner = await token.owner();
-
+      await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
+      let rate = 5000;
       var amountEther = 2;
       var amountWei = web3.toWei(amountEther, "ether");
 
@@ -97,7 +98,7 @@ contract('Multiple Crowdsales', function(accounts) {
 
 
 
-/*
+
 contract('QuantstampSale', function(accounts) {
   // account[0] points to the owner on the testRPC setup
   var owner = accounts[0];
