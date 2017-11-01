@@ -20,10 +20,8 @@ contract QuantstampSale is Pausable {
     address public beneficiary;
 
     // The crowdsale has a funding goal, cap, deadline, and minimum contribution
-    uint public fundingGoal;
     uint public fundingCap;
     uint public minContribution;
-    bool public fundingGoalReached = false;
     bool public fundingCapReached = false;
     bool public saleClosed = false;
 
@@ -58,7 +56,6 @@ contract QuantstampSale is Pausable {
     mapping(address=>uint[]) public tierCaps;
     mapping(address=>uint[]) public tierRates;
 
-
     // Events
     event GoalReached(address _beneficiary, uint _amountRaised);
     event CapReached(address _beneficiary, uint _amountRaised);
@@ -84,7 +81,6 @@ contract QuantstampSale is Pausable {
      * Constructor for a crowdsale of QuantstampToken tokens.
      *
      * @param ifSuccessfulSendTo            the beneficiary of the fund
-     * @param fundingGoalInEthers           the minimum goal to be reached
      * @param fundingCapInEthers            the cap (maximum) size of the fund
      * @param minimumContributionInWei      minimum contribution (in wei)
      * @param start                         the start time (UNIX timestamp)
@@ -93,7 +89,6 @@ contract QuantstampSale is Pausable {
      */
     function QuantstampSale(
         address ifSuccessfulSendTo,
-        uint fundingGoalInEthers,
         uint fundingCapInEthers,
         uint minimumContributionInWei,
         uint start,
