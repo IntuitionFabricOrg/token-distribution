@@ -20,10 +20,8 @@ contract QuantstampSale is Pausable {
     address public beneficiary;
 
     // The crowdsale has a funding goal, cap, deadline, and minimum contribution
-    uint public fundingGoal;
     uint public fundingCap;
     uint public minContribution;
-    bool public fundingGoalReached = false;
     bool public fundingCapReached = false;
     bool public saleClosed = false;
 
@@ -84,7 +82,6 @@ contract QuantstampSale is Pausable {
      * Constructor for a crowdsale of QuantstampToken tokens.
      *
      * @param ifSuccessfulSendTo            the beneficiary of the fund
-     * @param fundingGoalInEthers           the minimum goal to be reached
      * @param fundingCapInEthers            the cap (maximum) size of the fund
      * @param minimumContributionInWei      minimum contribution (in wei)
      * @param start                         the start time (UNIX timestamp)
@@ -93,7 +90,6 @@ contract QuantstampSale is Pausable {
      */
     function QuantstampSale(
         address ifSuccessfulSendTo,
-        uint fundingGoalInEthers,
         uint fundingCapInEthers,
         uint minimumContributionInWei,
         uint start,
@@ -102,10 +98,8 @@ contract QuantstampSale is Pausable {
     ) {
         require(ifSuccessfulSendTo != address(0) && ifSuccessfulSendTo != address(this));
         require(addressOfTokenUsedAsReward != address(0) && addressOfTokenUsedAsReward != address(this));
-        require(fundingGoalInEthers <= fundingCapInEthers);
         require(durationInMinutes > 0);
         beneficiary = ifSuccessfulSendTo;
-        fundingGoal = fundingGoalInEthers * 1 ether;
         fundingCap = fundingCapInEthers * 1 ether;
         minContribution = minimumContributionInWei;
         startTime = start;
@@ -144,7 +138,6 @@ contract QuantstampSale is Pausable {
             FundTransfer(msg.sender, amount, true);
             // Check if the funding goal or cap have been reached
             // TODO check impact on gas cost
-            checkFundingGoal();
             checkFundingCap();
         }
         else {
@@ -275,7 +268,6 @@ contract QuantstampSale is Pausable {
                 // TODO: is this actually a FundTransfer?
                 // FundTransfer(target, initialContributionInWei, true);
                 // Check if the funding goal or cap have been reached
-                checkFundingGoal();
                 checkFundingCap();
             }
             else {
@@ -355,7 +347,6 @@ contract QuantstampSale is Pausable {
         balanceOf[_to] = balanceOf[_to].add(amountWei);
         amountRaised = amountRaised.add(amountWei);
         FundTransfer(_to, amountWei, true);
-        checkFundingGoal();
         checkFundingCap();
     }
 
@@ -366,28 +357,32 @@ contract QuantstampSale is Pausable {
      * to the beneficiary specified when the crowdsale was created.
      */
     function ownerSafeWithdrawal() external onlyOwner nonReentrant {
-        require(fundingGoalReached);
         uint balanceToSend = this.balance;
         beneficiary.transfer(balanceToSend);
         FundTransfer(beneficiary, balanceToSend, false);
     }
 
     /**
+     * TODO: remove
      * The owner can unlock the fund with this function. The use-
      * case for this is when the owner decides after the deadline
      * to allow contributors to be refunded their contributions.
      * Note that the fund would be automatically unlocked if the
      * minimum funding goal were not reached.
      */
+    /*
     function ownerUnlockFund() external afterDeadline onlyOwner {
         fundingGoalReached = false;
     }
+    */
 
     /**
+     * TODO: remove?
      * This function permits anybody to withdraw the funds they have
      * contributed if and only if the deadline has passed and the
      * funding goal was not reached.
      */
+    /*
     function safeWithdrawal() external afterDeadline nonReentrant {
         if (!fundingGoalReached) {
             uint amount = balanceOf[msg.sender];
@@ -399,19 +394,8 @@ contract QuantstampSale is Pausable {
             }
         }
     }
+    */
 
-    /**
-     * Checks if the funding goal has been reached. If it has, then
-     * the GoalReached event is triggered.
-     */
-    function checkFundingGoal() internal {
-        if (!fundingGoalReached) {
-            if (amountRaised >= fundingGoal) {
-                fundingGoalReached = true;
-                GoalReached(beneficiary, amountRaised);
-            }
-        }
-    }
 
     /**
      * Checks if the funding cap has been reached. If it has, then

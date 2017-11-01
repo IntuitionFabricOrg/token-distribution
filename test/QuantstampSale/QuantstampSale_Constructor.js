@@ -36,14 +36,12 @@ contract('QuantstampSale Constructor', function(accounts) {
     assert.equal(refundAmount, 0);
 
     let ifSuccessfulSendTo        = await sale.beneficiary();
-    let fundingGoalInEthers       = (await sale.fundingGoal()).toNumber();
     let fundingCapInEthers        = (await sale.fundingCap()).toNumber();
     let minimumContributionInWei  = (await sale.minContribution()).toNumber();
     let start                     = (await sale.startTime()).toNumber();
     let end                       = (await sale.endTime()).toNumber();
 
     assert.equal(ifSuccessfulSendTo, beneficiary, "beneficiary address is incorrect");
-    assert.equal(fundingGoalInEthers, 10 * (10 ** 18), "funding goal is incorrect");
     assert.equal(fundingCapInEthers, 20 * (10 ** 18), "funding cap is incorrect");
     assert.equal(minimumContributionInWei, 1, "minimum contribution in wei is incorrect");
     assert.equal(start + 120, end, "end time should be 120 seconds after start time");

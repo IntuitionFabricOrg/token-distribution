@@ -50,7 +50,7 @@ contract('Multiple Crowdsales', function(accounts) {
         assert.equal((allowanceAfter.plus(user2BalanceAfter)).toNumber(), allowance.toNumber(), "The total tokens should remain the same");
     });
 
-    it("should accept another 10 ether, reaching the goal", async function() {
+    it("should accept another 10 ether", async function() {
         var amountEther = 10;
         var amountWei = web3.toWei(amountEther, "ether");
 
@@ -82,7 +82,7 @@ contract('Multiple Crowdsales', function(accounts) {
 
     it("the owner of QuantstampToken should now issue allowance to a new crowdsale", async function() {
         let time = new Date().getTime() / 1000;
-        sale2 = await QuantstampSale.new(accounts[1], 10, 20, 1, time, 2, token.address);
+        sale2 = await QuantstampSale.new(accounts[1], 20, 1, time, 2, token.address);
         await token.setCrowdsale(sale2.address, 0); // ensures crowdsale has allowance of tokens
         let saleAllowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
         let sale2Allowance = (await token.allowance(tokenOwner, sale2.address)).toNumber();

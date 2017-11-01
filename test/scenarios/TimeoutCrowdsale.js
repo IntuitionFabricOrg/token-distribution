@@ -56,7 +56,7 @@ contract('Missed-deadline Crowdsale', function(accounts) {
         var time = (new Date().getTime() / 1000);
         var futureTime = time + 130;
 
-        let sale2 = await QuantstampSaleMock.new(accounts[1], 10, 20, 1, time, 2, token.address);
+        let sale2 = await QuantstampSaleMock.new(accounts[1], 20, 1, time, 2, token.address);
         await token.setCrowdsale(sale2.address, 0); // ensures crowdsale has allowance of tokens
         await sale2.registerUser(user2, [util.twoEther], [5000], 0, {from:owner});
 

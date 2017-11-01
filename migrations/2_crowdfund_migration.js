@@ -36,7 +36,7 @@ module.exports = function(deployer, network, accounts) {
     var monkey = 1234;
 
     deployer.deploy(QuantstampToken, accounts[1]).then(function() {
-        return deployer.deploy(QuantstampSale, accounts[1], 10, 20, 1, time, 2, QuantstampToken.address);
+        return deployer.deploy(QuantstampSale, accounts[1], 20, 1, time, 2, QuantstampToken.address);
     });
 
 };

@@ -22,38 +22,20 @@ contract('QSP-11: Owner withdrawal', function(accounts) {
     });
     });
 
-    it("owner should not be able to withdraw funds if the funding goal has not been reached", async function() {
-        await token.setCrowdsale(sale.address, 0);
-        let fundingGoal = (await sale.fundingGoal()).toNumber();
 
-        let amountRaised = (await sale.amountRaised()).toNumber();
-        let fundingGoalReached = await sale.fundingGoalReached();
-
-        assert.equal(fundingGoalReached, false);
-        assert.equal(amountRaised < fundingGoal, true);
-
-        let beneficiary = await sale.beneficiary();
-
-        // can owner can withdraw funds?
-        util.expectThrow(sale.ownerSafeWithdrawal());
-    });
 
   it("owner should be able to withdraw funds once funding goal is reached", async function() {
     await token.setCrowdsale(sale.address, 0);
     await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
 
-    let fundingGoal = (await sale.fundingGoal()).toNumber();
-    console.log(fundingGoal);
     util.logEthBalances(token, sale, accounts);
     // this send cause the funding goal to be reached
-    await sale.sendTransaction({value:fundingGoal, from:user2});
-    console.log(fundingGoal);
+    var amt = util.one_ether;
+    await sale.sendTransaction({value:amt, from:user2});
 
     let amountRaised = (await sale.amountRaised()).toNumber();
-    let fundingGoalReached = await sale.fundingGoalReached();
 
-    assert.equal(fundingGoalReached, true);
-    assert.equal(amountRaised, fundingGoal);
+    assert.equal(amountRaised, amt);
 
     let beneficiary = await sale.beneficiary();
     let beforeBalance = web3.eth.getBalance(beneficiary);
