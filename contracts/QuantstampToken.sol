@@ -30,7 +30,7 @@ contract QuantstampToken is StandardToken, BurnableToken, Ownable {
     uint256 public crowdSaleAllowance;      // the number of tokens available for crowdsales
     uint256 public adminAllowance;          // the number of tokens available for the administrator
     address public crowdSaleAddr;           // the address of a crowdsale currently selling this token
-    address public adminAddr;               // the address of a crowdsale currently selling this token
+    address public adminAddr;               // the address of the token admin account
     bool    public transferEnabled = false; // indicates if transferring tokens is enabled or not
 
     // Modifiers
