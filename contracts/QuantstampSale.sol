@@ -122,7 +122,7 @@ contract QuantstampSale is Pausable {
      * tokens are transferred to the sender, and that the correct
      * number of tokens are sent according to the current rate.
      */
-    function () payable {
+    function () payable whenNotPaused beforeDeadline afterStartTime saleNotClosed nonReentrant{
         require(msg.value >= minContribution);
         uint amount = msg.value;
         uint currentBalanceOfSender = balanceOf[msg.sender];
