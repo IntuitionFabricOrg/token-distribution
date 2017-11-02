@@ -391,7 +391,7 @@ contract QuantstampSale is Pausable {
         if (!tokenReward.transferFrom(tokenReward.owner(), _to, amountMiniQsp)) {
             revert();
         }
-        // balanceOf[_to] = balanceOf[_to].add(amountWei);
+        balanceOf[_to] = balanceOf[_to].add(amountWei);
         amountRaised = amountRaised.add(amountWei);
         FundTransfer(_to, amountWei, true);
         checkFundingCap();
