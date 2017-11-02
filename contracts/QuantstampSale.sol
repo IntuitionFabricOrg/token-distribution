@@ -161,23 +161,33 @@ contract QuantstampSale is Pausable {
         uint remaining4 = 0;
         uint numTokens = 0;
 
+        // if/else tree to get the remaining cap for each tier
         if(balance <= cap3[addr]){
-            remaining1 = cap3[addr].sub(balance);
+            remaining3 = cap3[addr].sub(balance);
             remaining2 = cap2[addr];
-            remaining3 = cap1[addr];
+            remaining1 = cap1[addr];
             remaining4 = cap4[addr];
         }
-        else if(balance <= cap2[addr]){
-            remaining2 = cap2[addr].sub(balance);
-            remaining3 = cap1[addr];
-            remaining4 = cap4[addr];
-        }
-        else if(balance <= cap1[addr]){
-            remaining3 = cap1[addr].sub(balance);
-            remaining4 = cap4[addr];
-        }
-        else if(balance <= cap4[addr]){
-            remaining4 = cap4[addr].sub(balance);
+        else{
+            balance = balance.sub(cap3[addr]);
+            if(balance <= cap2[addr]){
+                remaining2 = cap2[addr].sub(balance);
+                remaining1 = cap1[addr];
+                remaining4 = cap4[addr];
+            }
+            else{
+                balance = balance.sub(cap2[addr]);
+                if(balance <= cap1[addr]){
+                    remaining1 = cap1[addr].sub(balance);
+                    remaining4 = cap4[addr];
+                }
+                else{
+                    balance = balance.sub(cap1[addr]);
+                    if(balance <= cap4[addr]){
+                        remaining4 = cap4[addr].sub(balance);
+                    }
+                }
+            }
         }
 
         if(remaining3 > 0){
