@@ -242,15 +242,40 @@ contract QuantstampSale is Pausable {
     }
 
     /*
-    * If the user was already registerfd,
+    * If the user was already registered, ensure that the new caps do not conflict previous contributions
+    *
+    * NOTE: cannot use SafeMath here, because it exceeds the local variable stack limit.
+    * Should be ok since it is onlyOwner, and conditionals should guard the subtractions from underflow.
     */
-    function validateUpdatedRegistration(address contributor, uint c1, uint c2, uint c3, uint c4)
+    function validateUpdatedRegistration(address addr, uint c1, uint c2, uint c3, uint c4)
         internal
         onlyOwner returns(bool)
     {
-        uint balance = balanceOf[contributor];
-        // TODO
-        return true;
+        uint contributed_tier3 = 0;
+        uint contributed_tier2 = 0;
+        uint contributed_tier1 = 0;
+        uint contributed_tier4 = 0;
+
+        uint balance = balanceOf[addr];
+        if(balance <= cap3[addr]){
+            contributed_tier3 = balance;
+        }
+        else if(balance <= cap3[addr] + cap2[addr]){
+            contributed_tier3 = cap3[addr];
+            contributed_tier2 = balance - cap3[addr];
+        }
+        else if(balance <= cap3[addr] + cap2[addr] + cap1[addr]){
+            contributed_tier3 = cap3[addr];
+            contributed_tier2 = cap2[addr];
+            contributed_tier1 = balance - cap3[addr] - cap2[addr];
+        }
+        else{
+            contributed_tier3 = cap3[addr];
+            contributed_tier2 = cap2[addr];
+            contributed_tier1 = cap1[addr];
+            contributed_tier4 = balance - cap3[addr] - cap2[addr] - cap1[addr];
+        }
+        return (c3 <= contributed_tier3) && (c2 <= contributed_tier2) && (c1 <= contributed_tier1) && (c4 <= contributed_tier4);
     }
 
     /**
