@@ -202,31 +202,31 @@ contract QuantstampSale is Pausable {
         }
         if(remaining2 > 0 && amount > 0){
             if(amount < remaining2){
-                numTokens = rate2.mul(amount);
+                numTokens = numTokens.add(rate2.mul(amount));
                 amount = 0;
             }
             else{
-                numTokens = rate2.mul(remaining2);
+                numTokens = numTokens.add(rate2.mul(remaining2));
                 amount = amount.sub(remaining2);
             }
         }
         if(remaining1 > 0 && amount > 0){
             if(amount < remaining1){
-                numTokens = rate1.mul(amount);
+                numTokens = numTokens.add(rate1.mul(amount));
                 amount = 0;
             }
             else{
-                numTokens = rate1.mul(remaining1);
+                numTokens = numTokens.add(rate1.mul(remaining1));
                 amount = amount.sub(remaining1);
             }
         }
         if(remaining4 > 0 && amount > 0){
             if(amount < remaining4){
-                numTokens = rate4.mul(amount);
+                numTokens = numTokens.add(rate4.mul(amount));
                 amount = 0;
             }
             else{
-                numTokens = rate4.mul(remaining4);
+                numTokens = numTokens.add(rate4.mul(remaining4));
                 amount = amount.sub(remaining4);
             }
         }
