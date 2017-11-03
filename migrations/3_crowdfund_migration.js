@@ -12,19 +12,6 @@ var QuantstampSale = artifacts.require("./QuantstampSale.sol");
 
 module.exports = function(deployer, network, accounts) {
     //console.log("Accounts: " + accounts);
-
-    deployer.deploy(SafeMath);
-    deployer.deploy(Ownable);
-    deployer.link(Ownable, Pausable);
-    deployer.deploy(Pausable);
-
-    deployer.deploy(BasicToken);
-    deployer.link(BasicToken, SafeMath);
-    deployer.link(BasicToken, ERC20Basic);
-
-    deployer.deploy(StandardToken);
-    deployer.link(StandardToken, BasicToken);
-
     deployer.deploy(QuantstampToken);
     deployer.link(QuantstampToken, StandardToken);
     deployer.link(QuantstampToken, Ownable);
@@ -32,11 +19,16 @@ module.exports = function(deployer, network, accounts) {
     deployer.link(QuantstampToken, SafeMath);
 
     var time = new Date().getTime() / 1000;
+    console.log("TIME: " + time);
+    // Test values for ropsten
+    var admin = "0x3d011185A327DbF81b65cB5502Ab33D02dee95F0";
+    var beneficiary = "0x26f77bD64d3CE2891906acB27d7ba09feB0C085b";
 
-    var monkey = 1234;
-
-    deployer.deploy(QuantstampToken, accounts[1]).then(function() {
-        return deployer.deploy(QuantstampSale, accounts[1], 20, 1, time, 2, QuantstampToken.address);
+    //used to be accounts[1] for both token and sale
+    deployer.deploy(QuantstampToken, admin).then(function() {
+        return deployer.deploy(QuantstampSale, beneficiary, 20, 1, time, 2, QuantstampToken.address);
     });
+
+
 
 };

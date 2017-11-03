@@ -26,11 +26,11 @@ contract('QSP-11: Owner withdrawal', function(accounts) {
 
   it("owner should be able to withdraw funds once funding goal is reached", async function() {
     await token.setCrowdsale(sale.address, 0);
-    await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
+    await sale.registerUser(user2, util.oneEther, util.oneEther, util.oneEther, util.oneEther, {from:owner});
 
     util.logEthBalances(token, sale, accounts);
     // this send cause the funding goal to be reached
-    var amt = util.one_ether;
+    var amt = util.oneEther;
     await sale.sendTransaction({value:amt, from:user2});
 
     let amountRaised = (await sale.amountRaised()).toNumber();
@@ -51,9 +51,34 @@ contract('QSP-11: Owner withdrawal', function(accounts) {
     // now, the beneficiary should have the funds
     assert.equal(afterBalance > beforeBalance, true);
 
-    // this should still be true unless something went wrong when sending funds to beneficiary
-    fundingGoalReached = await sale.fundingGoalReached();
-    assert.equal(fundingGoalReached, true);
+  });
+
+it("owner should be able to withdraw funds once funding goal is reached2", async function() {
+    await token.setCrowdsale(sale.address, 0);
+    await sale.registerUser(user2, util.oneEther, util.oneEther, util.oneEther, util.oneEther, {from:owner});
+
+    util.logEthBalances(token, sale, accounts);
+    // this send cause the funding goal to be reached
+    var amt = util.oneEther;
+    await sale.sendTransaction({value:amt, from:user2});
+
+    let amountRaised = (await sale.amountRaised()).toNumber();
+
+    assert.equal(amountRaised, amt);
+
+    let beneficiary = await sale.beneficiary();
+    let beforeBalance = web3.eth.getBalance(beneficiary);
+
+    // can owner can withdraw funds?
+    await sale.ownerSafeWithdrawal();
+
+    let afterBalance = web3.eth.getBalance(beneficiary);
+    console.log("amountRaised  : " + amountRaised);
+    console.log("beforeBalance : " + beforeBalance);
+    console.log("afterBalance  : " + afterBalance);
+
+    // now, the beneficiary should have the funds
+    assert.equal(afterBalance > beforeBalance, true);
   });
 
 });

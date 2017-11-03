@@ -16,13 +16,12 @@ contract QuantstampSaleMock is QuantstampSale {
 
     function QuantstampSaleMock(
         address ifSuccessfulSendTo,
-        uint fundingGoalInEthers,
         uint fundingCapInEthers,
         uint minimumContributionInWei,
         uint start,
         uint durationInMinutes,
         address addressOfTokenUsedAsReward
-    ) QuantstampSale(ifSuccessfulSendTo, fundingGoalInEthers, fundingCapInEthers,
+    ) QuantstampSale(ifSuccessfulSendTo, fundingCapInEthers,
                      minimumContributionInWei, start, durationInMinutes,
                      addressOfTokenUsedAsReward){ 
         _now = start + 1;

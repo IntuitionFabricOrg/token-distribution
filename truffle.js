@@ -8,7 +8,15 @@ module.exports = {
     ropsten: {
       host: "localhost",
       port: 8546,
-      network_id: "3"
+      network_id: "3",
+      gas: 4612388,
+      gasPrice: 110000000000
     }
+  },
+  solc: {
+      optimizer: {
+	  enabled: false,
+	  runs: 0
+      }
   }
 };
