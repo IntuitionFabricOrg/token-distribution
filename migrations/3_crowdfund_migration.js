@@ -19,10 +19,18 @@ module.exports = function(deployer, network, accounts) {
     deployer.link(QuantstampToken, SafeMath);
 
     var time = new Date().getTime() / 1000;
+    var admin = "";
+    var beneficiary = "";
     console.log("TIME: " + time);
-    // Test values for ropsten
-    var admin = "0x3d011185A327DbF81b65cB5502Ab33D02dee95F0";
-    var beneficiary = "0x26f77bD64d3CE2891906acB27d7ba09feB0C085b";
+    if (network == "localhost") {
+        admin = accounts[1];
+        beneficiary = accounts[1];
+    } else if(network == "ropsten") {
+        admin = "0x3d011185A327DbF81b65cB5502Ab33D02dee95F0";
+        beneficiary = "0x26f77bD64d3CE2891906acB27d7ba09feB0C085b";
+    }
+    console.log("Admin: " + admin);
+    console.log("Beneficiary: " + beneficiary);
 
     //used to be accounts[1] for both token and sale
     deployer.deploy(QuantstampToken, admin).then(function() {

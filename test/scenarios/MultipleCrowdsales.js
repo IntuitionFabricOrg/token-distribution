@@ -33,7 +33,8 @@ contract('Multiple Crowdsales', function(accounts) {
     it("should accept 2 ether for the crowdsale", async function() {
         // 0 indicates all crowdsale tokens
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
-        await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
+        await sale.registerUser(user2, util.hundredEther, util.hundredEther,
+            util.hundredEther, util.hundredEther, {from:owner});
 
         let allowance = (await token.allowance(tokenOwner, sale.address));
 
@@ -42,11 +43,11 @@ contract('Multiple Crowdsales', function(accounts) {
         let allowanceAfter = (await token.allowance(tokenOwner, sale.address));
         let user2BalanceAfter = (await token.balanceOf(user2));
         let ownerBalanceAfter = (await token.balanceOf(owner));
-        let subbedAllowance = allowance.minus(util.twoEther * 5000);
+        let subbedAllowance = allowance.minus(util.twoEther * 6000);
 
         assert.equal(subbedAllowance.toNumber(), allowanceAfter.toNumber(), "The crowdsale should have sent amountWei*rate miniQSP");
 
-        assert.equal(user2BalanceAfter, (util.twoEther * 5000), "The user should have gained amountWei*rate miniQSP");
+        assert.equal(user2BalanceAfter, (util.twoEther * 6000), "The user should have gained amountWei*rate miniQSP");
         assert.equal((allowanceAfter.plus(user2BalanceAfter)).toNumber(), allowance.toNumber(), "The total tokens should remain the same");
     });
 
@@ -62,8 +63,8 @@ contract('Multiple Crowdsales', function(accounts) {
         let user2BalanceAfter = (await token.balanceOf(user2)).toNumber();
         let ownerBalanceAfter = (await token.balanceOf(tokenOwner)).toNumber();
 
-        assert.equal(allowance - (amountWei * 5000), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
-        assert.equal(user2BalanceAfter, web3.toWei(12, "ether") * 5000, "The user should have gained amountWei*rate miniQSP");
+        assert.equal(allowance - (amountWei * 6000), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
+        assert.equal(user2BalanceAfter, web3.toWei(12, "ether") * 6000, "The user should have gained amountWei*rate miniQSP");
         assert.equal(allowanceAfter + user2BalanceAfter, crowdsaleSupply, "The total tokens should remain the same");
     });
 
@@ -99,8 +100,8 @@ contract('Multiple Crowdsales', function(accounts) {
         let allowance = (await token.allowance(tokenOwner, sale2.address));
 
         let user2Balance = (await token.balanceOf(user2)).toNumber();
-        await sale2.registerUser(user2, [util.hundredEther], [6000], 0, {from:owner});
-
+        await sale2.registerUser(user2, util.hundredEther, util.hundredEther,
+            util.hundredEther, util.hundredEther, {from:owner});
         await sale2.sendTransaction({from: user2,  value: util.twoEther});
 
         let allowanceAfter = (await token.allowance(tokenOwner, sale2.address));

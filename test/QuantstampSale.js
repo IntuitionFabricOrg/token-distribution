@@ -64,9 +64,9 @@ it("user should not be able to contribute more than allowed by the caps", async 
     const tier1cap = 0, tier2cap = 0, tier3cap = 0, tier4cap = 1;
 
     await token.setCrowdsale(sale.address, 0);
-    await sale.registerUser(user2,
+    await sale.registerUser(user3,
         util.toEther(tier1cap), util.toEther(tier2cap), util.toEther(tier3cap), util.toEther(tier4cap), {from:owner});
-    await util.expectThrow(sale.sendTransaction({value : util.toEther(2), from : user2}));    
+    await util.expectThrow(sale.sendTransaction({value : util.toEther(2), from : user3}));    
 });
 
 /*
