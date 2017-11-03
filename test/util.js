@@ -14,6 +14,10 @@ var expectThrow = async function(promise) {
   assert.fail('Expected throw not received');
 };
 
+function toEther (n) {
+    return web3.toWei(n, "ether");
+}
+
 module.exports = {
 
     expectThrow : async function(promise) {
@@ -64,9 +68,12 @@ module.exports = {
         console.log("");
     },
 
-    oneEther : web3.toWei(1, "ether"),
-    twoEther : web3.toWei(2, "ether"),
-    threeEther : web3.toWei(3, "ether"),
-    hundredEther : web3.toWei(100, "ether")
+    toEther : toEther,
 
+    toQsp : toEther,
+
+    oneEther : toEther(1),
+    twoEther : toEther(2),
+    threeEther : toEther(3),
+    hundredEther : toEther(100)
 }

@@ -22,63 +22,31 @@ contract('QSP-11: Owner withdrawal', function(accounts) {
     });
     });
 
+    it("owner should be able to withdraw funds once funding goal is reached", async function() {
+        await token.setCrowdsale(sale.address, 0);
+        await sale.registerUser(user2, util.oneEther, util.oneEther, util.oneEther, util.oneEther, {from:owner});
 
+        util.logEthBalances(token, sale, accounts);
+        // this send cause the funding goal to be reached
+        var amt = util.oneEther;
+        await sale.sendTransaction({value:amt, from:user2});
 
-  it("owner should be able to withdraw funds once funding goal is reached", async function() {
-    await token.setCrowdsale(sale.address, 0);
-    await sale.registerUser(user2, util.oneEther, util.oneEther, util.oneEther, util.oneEther, {from:owner});
+        let amountRaised = (await sale.amountRaised()).toNumber();
 
-    util.logEthBalances(token, sale, accounts);
-    // this send cause the funding goal to be reached
-    var amt = util.oneEther;
-    await sale.sendTransaction({value:amt, from:user2});
+        assert.equal(amountRaised, amt);
 
-    let amountRaised = (await sale.amountRaised()).toNumber();
+        let beneficiary = await sale.beneficiary();
+        let beforeBalance = web3.eth.getBalance(beneficiary);
 
-    assert.equal(amountRaised, amt);
+        // can owner can withdraw funds?
+        await sale.ownerSafeWithdrawal();
 
-    let beneficiary = await sale.beneficiary();
-    let beforeBalance = web3.eth.getBalance(beneficiary);
+        let afterBalance = web3.eth.getBalance(beneficiary);
+        console.log("amountRaised  : " + amountRaised);
+        console.log("beforeBalance : " + beforeBalance);
+        console.log("afterBalance  : " + afterBalance);
 
-    // can owner can withdraw funds?
-    await sale.ownerSafeWithdrawal();
-
-    let afterBalance = web3.eth.getBalance(beneficiary);
-    console.log("amountRaised  : " + amountRaised);
-    console.log("beforeBalance : " + beforeBalance);
-    console.log("afterBalance  : " + afterBalance);
-
-    // now, the beneficiary should have the funds
-    assert.equal(afterBalance > beforeBalance, true);
-
-  });
-
-it("owner should be able to withdraw funds once funding goal is reached2", async function() {
-    await token.setCrowdsale(sale.address, 0);
-    await sale.registerUser(user2, util.oneEther, util.oneEther, util.oneEther, util.oneEther, {from:owner});
-
-    util.logEthBalances(token, sale, accounts);
-    // this send cause the funding goal to be reached
-    var amt = util.oneEther;
-    await sale.sendTransaction({value:amt, from:user2});
-
-    let amountRaised = (await sale.amountRaised()).toNumber();
-
-    assert.equal(amountRaised, amt);
-
-    let beneficiary = await sale.beneficiary();
-    let beforeBalance = web3.eth.getBalance(beneficiary);
-
-    // can owner can withdraw funds?
-    await sale.ownerSafeWithdrawal();
-
-    let afterBalance = web3.eth.getBalance(beneficiary);
-    console.log("amountRaised  : " + amountRaised);
-    console.log("beforeBalance : " + beforeBalance);
-    console.log("afterBalance  : " + afterBalance);
-
-    // now, the beneficiary should have the funds
-    assert.equal(afterBalance > beforeBalance, true);
-  });
-
+        // now, the beneficiary should have the funds
+        assert.equal(afterBalance > beforeBalance, true);
+    });
 });

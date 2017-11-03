@@ -1,7 +1,8 @@
 
 var QuantstampSale = artifacts.require("./QuantstampSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
-/*
+var util = require("./util.js");
+
 contract('QuantstampSale constructor', function(accounts) {
   // account[0] points to the owner on the testRPC setup
   var owner = accounts[0];
@@ -19,6 +20,56 @@ contract('QuantstampSale constructor', function(accounts) {
     });
   });
 
+it("user should first get tokens from tier 3, then tier 2, then tier 1, then tier 4", async function() {
+    // ETH : QSP rates dependi on the tier
+    const tier1rate = (await sale.rate1()).toNumber();
+    const tier2rate = (await sale.rate2()).toNumber();
+    const tier3rate = (await sale.rate3()).toNumber();
+    const tier4rate = (await sale.rate4()).toNumber();
+
+    // tier caps for each of the users; 0-indexed
+    const tier1cap = 2, tier2cap = 3, tier3cap = 4, tier4cap = 5;
+
+    await token.setCrowdsale(sale.address, 0);
+
+    await sale.registerUser(user2,
+        util.toEther(tier1cap), util.toEther(tier2cap), util.toEther(tier3cap), util.toEther(tier4cap), {from:owner});
+
+    // 1 ETH is well below the tier 3 cap
+    await sale.sendTransaction({value : util.toEther(1), from : user2});
+    assert.equal((await token.balanceOf(user2)).toNumber(), util.toQsp(tier3rate));
+
+    // Sending more ETH should fill tier 3 and 2
+    await sale.sendTransaction({value : util.toEther(4), from : user2});
+    assert.equal((await token.balanceOf(user2)).toNumber(), util.toQsp((tier3rate * tier3cap) + (tier2rate * 1)));
+
+    await sale.sendTransaction({value : util.toEther(1), from : user2});
+    assert.equal((await token.balanceOf(user2)).toNumber(), util.toQsp((tier3rate * tier3cap) + (tier2rate * 2)));
+
+    // tiers 2, 1, and 4
+    await sale.sendTransaction({value : util.toEther(4), from : user2});
+    assert.equal((await token.balanceOf(user2)).toNumber(), util.toQsp(
+        (tier3rate * tier3cap) + (tier2rate * tier2cap) + (tier1rate * tier1cap) + (tier4rate * 1)
+    ));
+});
+
+it("user should not be able to contribute more than allowed by the caps", async function() {
+    // ETH : QSP rates dependi on the tier
+    const tier1rate = (await sale.rate1()).toNumber();
+    const tier2rate = (await sale.rate2()).toNumber();
+    const tier3rate = (await sale.rate3()).toNumber();
+    const tier4rate = (await sale.rate4()).toNumber();
+
+    // tier caps for each of the users; 0-indexed
+    const tier1cap = 0, tier2cap = 0, tier3cap = 0, tier4cap = 1;
+
+    await token.setCrowdsale(sale.address, 0);
+    await sale.registerUser(user2,
+        util.toEther(tier1cap), util.toEther(tier2cap), util.toEther(tier3cap), util.toEther(tier4cap), {from:owner});
+    await util.expectThrow(sale.sendTransaction({value : util.toEther(2), from : user2}));    
+});
+
+/*
   it("should be an allowance so that the crowdsale can transfer the tokens", async function() {
       let crowdSaleBalance = (await token.crowdSaleSupply()).toNumber();
       await token.setCrowdsale(sale.address, crowdSaleBalance);
@@ -229,6 +280,6 @@ contract('QuantstampSale', function(accounts) {
           assert.equal(value, true, "AmountRaised changed even when paused");
       }).then(done).catch(done);
   });
-
-});
 */
+});
+
