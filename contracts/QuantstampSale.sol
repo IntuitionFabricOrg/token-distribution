@@ -285,7 +285,7 @@ contract QuantstampSale is Pausable {
             contributed_tier1 = cap1[addr];
             contributed_tier4 = balance - cap3[addr] - cap2[addr] - cap1[addr];
         }
-        return (c3 <= contributed_tier3) && (c2 <= contributed_tier2) && (c1 <= contributed_tier1) && (c4 <= contributed_tier4);
+        return (c3 >= contributed_tier3) && (c2 >= contributed_tier2) && (c1 >= contributed_tier1) && (c4 >= contributed_tier4);
     }
 
     /**

@@ -55,7 +55,7 @@ contract('QSP-11: Owner withdrawal', function(accounts) {
 
 it("owner should be able to withdraw funds once funding goal is reached2", async function() {
     await token.setCrowdsale(sale.address, 0);
-    await sale.registerUser(user2, util.oneEther, util.oneEther, util.oneEther, util.oneEther, {from:owner});
+    //await sale.registerUser(user2, util.oneEther, util.oneEther, util.oneEther, util.oneEther, {from:owner});
 
     util.logEthBalances(token, sale, accounts);
     // this send cause the funding goal to be reached
@@ -64,7 +64,7 @@ it("owner should be able to withdraw funds once funding goal is reached2", async
 
     let amountRaised = (await sale.amountRaised()).toNumber();
 
-    assert.equal(amountRaised, amt);
+    assert.equal(amountRaised, util.twoEther);
 
     let beneficiary = await sale.beneficiary();
     let beforeBalance = web3.eth.getBalance(beneficiary);
