@@ -46,13 +46,12 @@ contract('QuantstampSale.ownerAllocateTokens:', function(accounts) {
   });
 
   it("should allow transfers to registered users, even beyond caps", async function(){
-    let caps = [util.oneEther, util.oneEther, util.oneEther, util.twoEther];
-    await sale.registerUser(user2, caps[0], caps[1], caps[2], caps[3]);
-    await sale.registerUser(user3, caps[0], caps[1], caps[2], caps[3]);
+    await sale.registerUser(user2, util.oneEther, 6000);
+    await sale.registerUser(user3, util.oneEther, 6000);
 
     await sale.ownerAllocateTokens(user2, util.oneEther, util.oneEther, {from:owner});
 
-    await sale.ownerAllocateTokens(user3, util.hundredEther, util.oneEther, {from:owner});
+    await sale.ownerAllocateTokens(user3, util.twoEther, util.oneEther, {from:owner});
     let addrList = [user2, user3];
     let amtsList = [util.oneEther, util.twoEther];
     let user2_balance = await(sale.balanceOf(user2));
@@ -64,7 +63,6 @@ contract('QuantstampSale.ownerAllocateTokens:', function(accounts) {
     console.log(user2_balance.add(util.oneEther) + " " + user2_balance_after + " " + reached_cap);
     assert.equal(user2_balance.add(util.oneEther).toNumber(), user2_balance_after.toNumber(), "user2 ether balance should have increased by 1");
     assert.equal(user2_token_balance.add(util.oneEther).toNumber(), user2_token_balance_after.toNumber(), "user2 token balance should have increased by 1");
-
   });
 
   it("should allow transfers to unregistered users", async function(){
