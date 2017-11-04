@@ -130,12 +130,12 @@ contract QuantstampSale is Pausable {
         balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
         amountRaised = amountRaised.add(amount);
 
+        // Check if the funding cap have been reached
+        checkFundingCap();
+        
         // Transfer the tokens from the crowdsale supply to the sender
         if (tokenReward.transferFrom(tokenReward.owner(), msg.sender, numTokens)) {
             FundTransfer(msg.sender, amount, true);
-            // Check if the funding goal or cap have been reached
-            // TODO check impact on gas cost
-            checkFundingCap();
         }
         else {
             revert();
@@ -146,11 +146,11 @@ contract QuantstampSale is Pausable {
     * Computes the amount of QSP that should be issued for the given transaction.
     */
     function computeTokenAmount(address addr, uint balance, uint amount) internal returns (uint) {
-        if((balance + amount) > cap[addr]) {
+        if((balance.add(amount)) > cap[addr]) {
             // the amount sent by the user is above their total cap
             revert();
         }
-        return rate[addr] * amount;
+        return rate[addr].mul(amount);
     }
 
     /**
@@ -162,8 +162,8 @@ contract QuantstampSale is Pausable {
         internal
         onlyOwner returns (bool)
     {
-        // if cap or rate for this customer exist, then the customer has previously been registered
-        return cap[contributor] > 0 || rate[contributor] > 0;
+        // if cap for this customer exist, then the customer has previously been registered
+        return cap[contributor] > 0;
     }
 
     /**
@@ -202,7 +202,7 @@ contract QuantstampSale is Pausable {
         onlyOwner
     {
         require(registry[contributor]);
-        require(hasPreviouslyRegistered(contributor));
+        assert(hasPreviouslyRegistered(contributor));
         registry[contributor] = false;
         RegistrationStatusChanged(contributor, false, cap[contributor], rate[contributor]);
     }
@@ -344,12 +344,13 @@ contract QuantstampSale is Pausable {
      * the CapReached event is triggered.
      */
     function checkFundingCap() internal {
-        if (!fundingCapReached) {
-            if (amountRaised >= fundingCap) {
-                fundingCapReached = true;
-                saleClosed = true;
-                CapReached(beneficiary, amountRaised);
-            }
+        if (amountRaised > fundingCap) {
+            revert();
+        } else if (amountRaised == fundingCap) {
+            // Check if the funding cap have been reached
+            fundingCapReached = true;
+            saleClosed = true;
+            CapReached(beneficiary, amountRaised);
         }
     }
 

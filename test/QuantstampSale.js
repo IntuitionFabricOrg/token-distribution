@@ -23,7 +23,7 @@ contract('QuantstampSale constructor', function(accounts) {
   });
 
   async function registerUser (user, capInETH, rateInQSP) {
-      await sale.registerUser(user, util.toEther(cap1inETH), util.toQsp(rateInQSP), {from : owner});
+      await sale.registerUser(user, util.toEther(capInETH), rateInQSP, {from : owner});
   }
 
   async function sendTransaction (value, user) {
@@ -33,56 +33,35 @@ contract('QuantstampSale constructor', function(accounts) {
   async function balanceOf (user) {
       return (await token.balanceOf(user)).toNumber();
   }
-/*
-  // ETH : QSP rates depending on the tier
-  async function getTierRates () {
-      const rate1 = (await sale.rate1()).toNumber();
-      const rate2 = (await sale.rate2()).toNumber();
-      const rate3 = (await sale.rate3()).toNumber();
-      const rate4 = (await sale.rate4()).toNumber();
-      return {rate1, rate2, rate3, rate4};
-  }
 
-  it("should sell tokens in the following order tier 3, tier 2, tier 1, tier 4 (skipping tiers)", async function() {
-      const tiers = await getTierRates();
-      // tier caps for each of the users
-      const tier1cap = 2, tier2cap = 3, tier3cap = 4, tier4cap = 5;
+  it("should sell tokens at a specified rate", async function() {
+      const cap  = 5;
+      const rate = 6123;
 
       await token.setCrowdsale(sale.address, 0);
-      await registerUser(user2, tier1cap, tier2cap, tier3cap, tier4cap);
+      await registerUser(user2, cap, rate);
 
-      // 1 ETH is well below the tier 3 cap
+      // 1 ETH is well below the cap
       const contribution1 = 1;
       await sendTransaction(contribution1, user2);
-      assert.equal(await balanceOf(user2), util.toQsp(tiers.rate3));
+      assert.equal(await balanceOf(user2), util.toQsp(rate));
       assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1));
 
-      // Sending more ETH should fill tier 3 and 2
+      // Sending more ETH to reach the cap
       const contribution2 = 4;
+      const sum = contribution1 + contribution2;
       await sendTransaction(contribution2, user2);
-      const maxQspTier3 = tiers.rate3 * tier3cap;
-      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * 1)));
-      assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2));
-
-      const contribution3 = 1;
-      await sendTransaction(contribution3, user2);
-      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * 2)));
-      assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2 + contribution3));
-
-      // tiers 2, 1, and 4
-      const contribution4 = 4;
-      await sendTransaction(contribution4, user2);
-      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * tier2cap) + (tiers.rate1 * tier1cap) + (tiers.rate4 * 1)));
-      assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2 + contribution3 + contribution4));
+      assert.equal(await balanceOf(user2), util.toQsp(sum * rate));
+      assert.equal((await sale.amountRaised()).toNumber(), util.toEther(sum));
   });
 
-  it("should impossible to contribute more than allowed by the caps", async function() {
+  it("should not allow to contribute more than allowed by the caps", async function() {
       await token.setCrowdsale(sale.address, 0);
-      await registerUser(user3, 0, 0, 0, 1);
-      await util.expectThrow(sendTransaction(2, user3));    
+      await registerUser(user3, 1, 6000);
+      await util.expectThrow(sendTransaction(2, user3));
   });
 
-  it("should be impossible to contribute less than the min allowed amount of ETH", async function() {
+  it("should not allow to contribute less than the min allowed amount of ETH", async function() {
       await token.setCrowdsale(sale.address, 0);
       const minimumContributionInWei = (await sale.minContribution()).toNumber();
       if (minimumContributionInWei > 0) {
@@ -90,21 +69,22 @@ contract('QuantstampSale constructor', function(accounts) {
       }
   });
 
-  it("should be possible to register the same user to update the caps if they don't conflict with contributions", async function() {
-      const tiers = await getTierRates();
+  it("should allow to register the same user to update the caps if they don't conflict with contributions", async function() {
+      const cap  = 5;
+      const rate = 6123;
       await token.setCrowdsale(sale.address, 0);
       
-      await registerUser(user4, 3, 0, 5, 1);
+      await registerUser(user4, cap, rate);
       await sendTransaction(2, user4);
-      assert.equal(await balanceOf(user4), util.toQsp(2 * tiers.rate3));
+      assert.equal(await balanceOf(user4), util.toQsp(2 * rate));
 
-      // lower the tier 3 cap, increase tier 2 cap, don't change tier 1 cap
-      await registerUser(user4, 3, 1, 2, 1);
+      // lower the cap
+      await registerUser(user4, 4, rate);
       await sendTransaction(2, user4);
-      assert.equal(await balanceOf(user4), util.toQsp(2 * tiers.rate3 + tiers.rate2 + tiers.rate1));
+      assert.equal(await balanceOf(user4), util.toQsp(4 * rate));
 
-      // lower the tier 1 cap below the already accepted tier 1 contribution
-      await util.expectThrow(registerUser(user4, 0, 1, 2, 1));
+      // lower the cap below the already accepted tier contribution
+      await util.expectThrow(registerUser(user4, 3, rate));
   });
 
   it("should disallow unregistered users to buy tokens", async function() {
@@ -112,45 +92,54 @@ contract('QuantstampSale constructor', function(accounts) {
       await util.expectThrow(sendTransaction(1, user5));
   });
 
-  it("should sell tokens in the following order tier 3, tier 2, tier 1, tier 4 (not skipping tiers)", async function() {
-      const tiers = await getTierRates();
-      // tier caps for each of the users
-      const tier1cap = 1, tier2cap = 1, tier3cap = 1, tier4cap = 5;
-
+  it("should not overflow the cap", async function() {
       await token.setCrowdsale(sale.address, 0);
-      await registerUser(user5, tier1cap, tier2cap, tier3cap, tier4cap);
-
-      // 1 ETH is well below the tier 3 cap
-      await sendTransaction(1, user5);
-      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3));
-
-      // Sending more ETH should fill tier 3 and 2
-      await sendTransaction(1, user5);
-      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2));
-
-      // test changing the caps in the middle (should not fail)
-      await registerUser(user5, 0, tier2cap, tier3cap, tier4cap);
-      await registerUser(user5, tier1cap, tier2cap, tier3cap, tier4cap);
-
-      await sendTransaction(1, user5);
-      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2 + tiers.rate1));
-
-      // tiers 2, 1, and 4
-      await sendTransaction(1, user5);
-      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2 + tiers.rate1 + tiers.rate4));
-      // forced to add to tier 4
-      await sendTransaction(1, user5);
-
-      // test changing the caps at the end (should not fail)
-      await registerUser(user5, tier1cap, tier2cap, tier3cap, 3);
+      await registerUser(user5, 20, 6000);
+      await util.expectThrow(sendTransaction(12, user5));
   });
 
   it("should reach the cap", async function() {
       await token.setCrowdsale(sale.address, 0);
-      await sendTransaction(1, user5);
+      await registerUser(user5, 20, 6000);
+      await sendTransaction(11, user5);
       assert.equal(await sale.fundingCapReached(), true);
   });
-*/
+
+  it("should reject transactions with 0 value", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await util.expectThrow(sendTransaction(0, user5));
+  });
+
+  it("should reject caps below the min contribution", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      const minimumContributionInWei = (await sale.minContribution()).toNumber();
+      await util.expectThrow(sale.registerUser(user3, minimumContributionInWei - 1, 6000, {from : owner}));
+  });
+
+  it("should reject the address 0", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await util.expectThrow(sale.registerUser(0, 20, 6000, {from : owner}));
+  });
+
+  it("should deactivate only registered addresses", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await util.expectThrow(sale.deactivate(accounts[6]));
+  });
+
+  it("should keep the balance constant before and after reactivation", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      const balance = await balanceOf(user2);
+      await sale.deactivate(user2);
+      await sale.reactivate(user2);
+      const balanceAfterReactivation = await balanceOf(user2);
+      assert.equal(balance, balanceAfterReactivation);
+  });
+
+  it("should reactivate only registered addresses", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await util.expectThrow(sale.reactivate(accounts[6]));
+  });
+
 /*
   it("should be an allowance so that the crowdsale can transfer the tokens", async function() {
       let crowdSaleBalance = (await token.crowdSaleSupply()).toNumber();
