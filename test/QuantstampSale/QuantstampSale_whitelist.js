@@ -36,15 +36,13 @@ contract('Whitelist Crowdsale', function(accounts) {
         // 0 indicates all crowdsale tokens
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
 
-        var r = await sale.registerUser(user2, util.oneEther, util.twoEther, util.hundredEther, util.oneEther, {from:owner});
+        var r = await sale.registerUser(user2, util.oneEther, 6000, {from:owner});
 
         assert.equal(r.logs[0].event, 'RegistrationStatusChanged', "event is wrong");
 		assert.equal(r.logs[0].args.target, user2, "target is wrong");
 		assert.equal(r.logs[0].args.isRegistered, true, "isRegistered is wrong");
-		assert.equal(r.logs[0].args.c1, util.oneEther, "cap1 is wrong");
-		assert.equal(r.logs[0].args.c2, util.twoEther, "cap2 is wrong");
-		assert.equal(r.logs[0].args.c3, util.hundredEther, "cap3 is wrong");
-		assert.equal(r.logs[0].args.c4, util.oneEther, "cap4 is wrong");
+		assert.equal(r.logs[0].args.newCap, util.oneEther, "cap is wrong");
+		assert.equal(r.logs[0].args.newRate, 6000, "rate is wrong");
 
 		//let user2cap = await sale.userCapInWei.call(user2);
 		//console.log(user2cap);
@@ -53,15 +51,13 @@ contract('Whitelist Crowdsale', function(accounts) {
 		assert.equal(r.logs[0].event, 'RegistrationStatusChanged', "event is wrong");
 		assert.equal(r.logs[0].args.target, user2, "target is wrong");
 		assert.equal(r.logs[0].args.isRegistered, false, "isRegistered is wrong");
-
-
     });
 
     it("should allow user2 to buy tokens up to their limit", async function() {
         // 0 indicates all crowdsale tokens
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
 
-        await sale.registerUser(user2, 0, 0, util.twoEther, 0, {from:owner});
+        await sale.registerUser(user2, util.twoEther, 6000, {from:owner});
 
         let user2Balance = (await token.balanceOf(user2)).toNumber();
 
@@ -78,16 +74,15 @@ contract('Whitelist Crowdsale', function(accounts) {
 
         // should now fail
         await util.expectThrow(sale.sendTransaction({from: user2,  value: util.oneEther}));
-
     });
-
 
 
     it("should allow multiple users to be added to the whitelist", async function() {
         var addresses = [user4, user5, user6];
-        var caps = [util.oneEther, util.twoEther, util.threeEther];
+        const caps = [util.oneEther, util.twoEther, util.threeEther];
+        const rates = [6000, 6000, 6000];
 
-        await sale.registerUsers(addresses, caps, caps, caps, caps, {from:owner});
+        await sale.registerUsers(addresses, caps, rates, {from:owner});
 
         await sale.sendTransaction({from: user4,  value: util.oneEther});
         await sale.sendTransaction({from: user5,  value: util.oneEther});
@@ -116,14 +111,16 @@ contract('Whitelist Crowdsale', function(accounts) {
     it("should not allow different size lists when changing many registration statuses", async function() {
         var addresses3 = [user4, user5, user6];
         var caps3 = [util.oneEther, util.twoEther, util.threeEther];
+        const rates3 = [6000, 6000, 6000];
 
         var addresses2 = [user4, user5];
         var caps2 = [util.oneEther, util.threeEther];
+        const rates2 = [6000, 6000];
 
-        await util.expectThrow(sale.registerUsers(addresses2, caps2, caps2, caps2, caps3, {from: owner}));
-        await util.expectThrow(sale.registerUsers(addresses2, caps2, caps2, caps3, caps2, {from: owner}));
-        await util.expectThrow(sale.registerUsers(addresses2, caps2, caps3, caps2, caps2, {from: owner}));
-        await util.expectThrow(sale.registerUsers(addresses2, caps3, caps2, caps2, caps2, {from: owner}));
+        await util.expectThrow(sale.registerUsers(addresses2, caps2, rates3, {from: owner}));
+        await util.expectThrow(sale.registerUsers(addresses2, caps3, rates2, {from: owner}));
+        await util.expectThrow(sale.registerUsers(addresses3, caps2, rates3, {from: owner}));
+        await util.expectThrow(sale.registerUsers(addresses3, caps3, rates2, {from: owner}));
     });
 
 });

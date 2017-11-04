@@ -22,9 +22,8 @@ contract('QuantstampSale constructor', function(accounts) {
     });
   });
 
-  async function registerUser (user, cap1inETH, cap2inETH, cap3inETH, cap4inETH) {
-      await sale.registerUser(user,
-          util.toEther(cap1inETH), util.toEther(cap2inETH), util.toEther(cap3inETH), util.toEther(cap4inETH), {from : owner});
+  async function registerUser (user, capInETH, rateInQSP) {
+      await sale.registerUser(user, util.toEther(cap1inETH), util.toQsp(rateInQSP), {from : owner});
   }
 
   async function sendTransaction (value, user) {
@@ -34,7 +33,7 @@ contract('QuantstampSale constructor', function(accounts) {
   async function balanceOf (user) {
       return (await token.balanceOf(user)).toNumber();
   }
-
+/*
   // ETH : QSP rates depending on the tier
   async function getTierRates () {
       const rate1 = (await sale.rate1()).toNumber();
@@ -151,7 +150,7 @@ contract('QuantstampSale constructor', function(accounts) {
       await sendTransaction(1, user5);
       assert.equal(await sale.fundingCapReached(), true);
   });
-
+*/
 /*
   it("should be an allowance so that the crowdsale can transfer the tokens", async function() {
       let crowdSaleBalance = (await token.crowdSaleSupply()).toNumber();

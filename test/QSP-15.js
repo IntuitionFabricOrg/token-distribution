@@ -25,8 +25,7 @@ contract('QSP-15: Capacity Constraint', function(accounts) {
 
   it("crowdsale should stop accepting contributions when cap is reached", async function() {
     await token.setCrowdsale(sale.address, 0);
-    await sale.registerUser(user2, util.hundredEther, util.hundredEther, util.hundredEther,
-            util.hundredEther, {from:owner});
+    await sale.registerUser(user2, util.hundredEther, 6000, {from:owner});
 
     let capacity = (await sale.fundingCap()).toNumber();
 

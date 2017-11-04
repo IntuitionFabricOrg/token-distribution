@@ -56,8 +56,7 @@ contract('QuantstampToken (Basic Tests)', function(accounts) {
     it("should not allow a regular user to transfer before they are enabled", async function() {
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
 
-        await sale.registerUser(user2, util.hundredEther, util.hundredEther,
-            util.hundredEther, util.hundredEther, {from:owner});
+        await sale.registerUser(user2, util.hundredEther, 6000, {from:owner});
         await sale.sendTransaction({from:user2, value:util.twoEther});
         try{
             await token.transfer(user2, 10, {from: user1});
@@ -108,9 +107,6 @@ contract('QuantstampToken (Basic Tests)', function(accounts) {
   });
 
     it("should allow a regular user to make valid transfers after being enabled", async function() {
-    //await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
-        //await sale.registerUser(user3, util.hundredEther, util.hundredEther,
-        //    util.hundredEther, util.hundredEther, {from:owner});
         await token.transfer(user3, 5000 * util.oneEther, {from: user2});
         //await token.transfer(user3, 5000 * util.oneEther, {from: user2});
 

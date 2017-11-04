@@ -28,18 +28,11 @@ contract QuantstampSale is Pausable {
     // Whitelist data
     mapping(address => bool) public registry;
 
-    // For each user, specifies the cap (in wei) that can be contributed for each tier
-    // Tiers are filled in the order 3, 2, 1, 4
-    mapping(address => uint256) public cap1;        // 100% bonus
-    mapping(address => uint256) public cap2;        // 40% bonus
-    mapping(address => uint256) public cap3;        // 20% bonus
-    mapping(address => uint256) public cap4;        // 0% bonus
+    // For each user, specifies the cap (in wei) that can be contributed
+    mapping(address => uint256) public cap;
 
-    // Conversion rate by tier (QSP : ETHER)
-    uint public rate1 = 10000;
-    uint public rate2 = 7000;
-    uint public rate3 = 6000;
-    uint public rate4 = 5000;
+    // For each user, specifies the conversion rate (QSP : ETHER)
+    mapping(address => uint256) public rate;
 
     // Time period of sale (UNIX timestamps)
     uint public startTime;
@@ -65,7 +58,7 @@ contract QuantstampSale is Pausable {
     event GoalReached(address _beneficiary, uint _amountRaised);
     event CapReached(address _beneficiary, uint _amountRaised);
     event FundTransfer(address _backer, uint _amount, bool _isContribution);
-    event RegistrationStatusChanged(address target, bool isRegistered, uint c1, uint c2, uint c3, uint c4);
+    event RegistrationStatusChanged(address target, bool isRegistered, uint newCap, uint newRate);
 
 
     // Modifiers
@@ -151,90 +144,13 @@ contract QuantstampSale is Pausable {
 
     /**
     * Computes the amount of QSP that should be issued for the given transaction.
-    * Contribution tiers are filled up in the order 3, 2, 1, 4.
     */
-    function computeTokenAmount(address addr, uint balance, uint amount) internal
-        returns (uint){
-        uint remaining3 = 0;
-        uint remaining2 = 0;
-        uint remaining1 = 0;
-        uint remaining4 = 0;
-        uint numTokens = 0;
-
-        // if/else tree to get the remaining cap for each tier
-        if(balance <= cap3[addr]){
-            remaining3 = cap3[addr].sub(balance);
-            remaining2 = cap2[addr];
-            remaining1 = cap1[addr];
-            remaining4 = cap4[addr];
-        }
-        else{
-            balance = balance.sub(cap3[addr]);
-            if(balance <= cap2[addr]){
-                remaining2 = cap2[addr].sub(balance);
-                remaining1 = cap1[addr];
-                remaining4 = cap4[addr];
-            }
-            else{
-                balance = balance.sub(cap2[addr]);
-                if(balance <= cap1[addr]){
-                    remaining1 = cap1[addr].sub(balance);
-                    remaining4 = cap4[addr];
-                }
-                else{
-                    balance = balance.sub(cap1[addr]);
-                    assert(balance <= cap4[addr]);
-                    remaining4 = cap4[addr].sub(balance);
-                }
-            }
-        }
-
-        if(remaining3 > 0){
-            if(amount < remaining3){
-                numTokens = rate3.mul(amount);
-                amount = 0;
-            }
-            else{
-                numTokens = rate3.mul(remaining3);
-                amount = amount.sub(remaining3);
-            }
-        }
-        if(remaining2 > 0 && amount > 0){
-            if(amount < remaining2){
-                numTokens = numTokens.add(rate2.mul(amount));
-                amount = 0;
-            }
-            else{
-                numTokens = numTokens.add(rate2.mul(remaining2));
-                amount = amount.sub(remaining2);
-            }
-        }
-        if(remaining1 > 0 && amount > 0){
-            if(amount < remaining1){
-                numTokens = numTokens.add(rate1.mul(amount));
-                amount = 0;
-            }
-            else{
-                numTokens = numTokens.add(rate1.mul(remaining1));
-                amount = amount.sub(remaining1);
-            }
-        }
-        if(remaining4 > 0 && amount > 0){
-            if(amount < remaining4){
-                numTokens = numTokens.add(rate4.mul(amount));
-                amount = 0;
-            }
-            else{
-                numTokens = numTokens.add(rate4.mul(remaining4));
-                amount = amount.sub(remaining4);
-            }
-        }
-
-        if(amount > 0){
+    function computeTokenAmount(address addr, uint balance, uint amount) internal returns (uint) {
+        if((balance + amount) > cap[addr]) {
             // the amount sent by the user is above their total cap
             revert();
         }
-        return numTokens;
+        return rate[addr] * amount;
     }
 
     /**
@@ -246,57 +162,17 @@ contract QuantstampSale is Pausable {
         internal
         onlyOwner returns (bool)
     {
-        // if caps for this customer exist, then the customer has previously been registered
-        return (cap1[contributor].add(cap2[contributor]).add(cap3[contributor]).add(cap4[contributor])) > 0;
-    }
-
-    /*
-    * If the user was already registered, ensure that the new caps do not conflict previous contributions
-    *
-    * NOTE: cannot use SafeMath here, because it exceeds the local variable stack limit.
-    * Should be ok since it is onlyOwner, and conditionals should guard the subtractions from underflow.
-    */
-    function validateUpdatedRegistration(address addr, uint c1, uint c2, uint c3, uint c4)
-        internal
-        onlyOwner returns(bool)
-    {
-        uint contributed_tier3 = 0;
-        uint contributed_tier2 = 0;
-        uint contributed_tier1 = 0;
-        uint contributed_tier4 = 0;
-
-        uint balance = balanceOf[addr];
-        if(balance <= cap3[addr]){
-            contributed_tier3 = balance;
-        }
-        else if(balance <= cap3[addr] + cap2[addr]){
-            contributed_tier3 = cap3[addr];
-            contributed_tier2 = balance - cap3[addr];
-        }
-        else if(balance <= cap3[addr] + cap2[addr] + cap1[addr]){
-            contributed_tier3 = cap3[addr];
-            contributed_tier2 = cap2[addr];
-            contributed_tier1 = balance - cap3[addr] - cap2[addr];
-        }
-        else{
-            contributed_tier3 = cap3[addr];
-            contributed_tier2 = cap2[addr];
-            contributed_tier1 = cap1[addr];
-            contributed_tier4 = balance - cap3[addr] - cap2[addr] - cap1[addr];
-        }
-        return (c3 >= contributed_tier3) && (c2 >= contributed_tier2) && (c1 >= contributed_tier1) && (c4 >= contributed_tier4);
+        // if cap or rate for this customer exist, then the customer has previously been registered
+        return cap[contributor] > 0 || rate[contributor] > 0;
     }
 
     /**
      * @dev Sets registration status of an address for participation.
      *
      * @param contributor Address that will be registered/deregistered.
-     * @param c1 The maximum amount of wei that the user can contribute in tier 1.
-     * @param c2 The maximum amount of wei that the user can contribute in tier 2.
-     * @param c3 The maximum amount of wei that the user can contribute in tier 3.
-     * @param c4 The maximum amount of wei that the user can contribute in tier 4.
+     * @param newCap The maximum amount of wei that the user can contribute.
      */
-    function registerUser(address contributor, uint c1, uint c2, uint c3, uint c4)
+    function registerUser(address contributor, uint newCap, uint newRate)
         public
         onlyOwner
         //only24HBeforeSale // TODO do we want this?
@@ -304,15 +180,13 @@ contract QuantstampSale is Pausable {
         require(contributor != address(0));
         // if the user was already registered ensure that the new caps do not contradict their current contributions
         if(hasPreviouslyRegistered(contributor)){
-            require(validateUpdatedRegistration(contributor, c1, c2, c3, c4));
+            require(newCap >= balanceOf[contributor]);
         }
-        require(c1.add(c2).add(c3).add(c4) >= minContribution);
+        require(newCap >= minContribution);
         registry[contributor] = true;
-        cap1[contributor] = c1;
-        cap2[contributor] = c2;
-        cap3[contributor] = c3;
-        cap4[contributor] = c4;
-        RegistrationStatusChanged(contributor, true, c1, c2, c3, c4);
+        cap[contributor] = newCap;
+        rate[contributor] = newRate;
+        RegistrationStatusChanged(contributor, true, newCap, newRate);
     }
 
      /**
@@ -330,8 +204,7 @@ contract QuantstampSale is Pausable {
         require(registry[contributor]);
         require(hasPreviouslyRegistered(contributor));
         registry[contributor] = false;
-        RegistrationStatusChanged(contributor, false, cap1[contributor], cap2[contributor], cap3[contributor], cap4[contributor]);
-
+        RegistrationStatusChanged(contributor, false, cap[contributor], rate[contributor]);
     }
 
     /**
@@ -345,35 +218,25 @@ contract QuantstampSale is Pausable {
     {
         require(hasPreviouslyRegistered(contributor));
         registry[contributor] = true;
-        RegistrationStatusChanged(contributor, true, cap1[contributor], cap2[contributor], cap3[contributor], cap4[contributor]);
-
+        RegistrationStatusChanged(contributor, true, cap[contributor], rate[contributor]);
     }
 
     /**
      * @dev Sets registration statuses of addresses for participation.
      * @param contributors Addresses that will be registered/deregistered.
-     * @param caps1 The maximum amount of wei that each user can contribute to cap1, in the same order as the addresses.
-     * @param caps2 The maximum amount of wei that each user can contribute to cap2, in the same order as the addresses.
-     * @param caps3 The maximum amount of wei that each user can contribute to cap3, in the same order as the addresses.
-     * @param caps4 The maximum amount of wei that each user can contribute to cap4, in the same order as the addresses.
+     * @param caps The maximum amount of wei that each user can contribute to cap
      */
-    function registerUsers(address[] contributors,
-                           uint[] caps1,
-                           uint[] caps2,
-                           uint[] caps3,
-                           uint[] caps4)
+    function registerUsers(address[] contributors, uint[] caps, uint[] rates)
         public
         onlyOwner
         //only24HBeforeSale // TODO do we want this?
     {
         // check that all arrays have the same length
-        require(contributors.length == caps1.length);
-        require(contributors.length == caps2.length);
-        require(contributors.length == caps3.length);
-        require(contributors.length == caps4.length);
+        require(contributors.length == caps.length);
+        require(contributors.length == rates.length);
 
         for (uint i = 0; i < contributors.length; i++) {
-            registerUser(contributors[i], caps1[i], caps2[i], caps3[i], caps4[i]);
+            registerUser(contributors[i], caps[i], rates[i]);
         }
     }
 
@@ -383,7 +246,6 @@ contract QuantstampSale is Pausable {
     function terminate() external onlyOwner {
         saleClosed = true;
     }
-
 
     /**
      * The owner can allocate the specified amount of tokens from the
@@ -405,8 +267,6 @@ contract QuantstampSale is Pausable {
             ownerAllocateTokens(addrs[i], weiAmounts[i], miniQspAmounts[i]);
         }
     }
-
-
 
     /**
      * The owner can allocate the specified amount of tokens from the
@@ -500,18 +360,4 @@ contract QuantstampSale is Pausable {
     function currentTime() constant returns (uint _currentTime) {
         return now;
     }
-
-
-    /**
-     * TODO: remove
-     * Given an amount in QSP, this method returns the equivalent amount
-     * in mini-QSP.
-     *
-     * @param amount    an amount expressed in units of QSP
-     */
-     /*
-    function convertToMiniQsp(uint amount) internal constant returns (uint) {
-        return amount * (10 ** uint(tokenReward.decimals()));
-    }
-    */
 }

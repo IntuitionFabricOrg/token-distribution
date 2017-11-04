@@ -24,7 +24,7 @@ contract('QSP-11: Owner withdrawal', function(accounts) {
 
     it("owner should be able to withdraw funds once funding goal is reached", async function() {
         await token.setCrowdsale(sale.address, 0);
-        await sale.registerUser(user2, util.oneEther, util.oneEther, util.oneEther, util.oneEther, {from:owner});
+        await sale.registerUser(user2, util.oneEther, 6000, {from:owner});
 
         util.logEthBalances(token, sale, accounts);
         // this send cause the funding goal to be reached
