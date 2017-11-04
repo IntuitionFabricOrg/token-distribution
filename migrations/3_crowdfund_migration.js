@@ -22,12 +22,13 @@ module.exports = function(deployer, network, accounts) {
     var admin = "";
     var beneficiary = "";
     console.log("TIME: " + time);
-    if (network == "localhost") {
-        admin = accounts[1];
-        beneficiary = accounts[1];
-    } else if(network == "ropsten") {
+    if(network == "ropsten") {
         admin = "0x3d011185A327DbF81b65cB5502Ab33D02dee95F0";
         beneficiary = "0x26f77bD64d3CE2891906acB27d7ba09feB0C085b";
+    }
+    else { // "localhost" or "coverage"
+        admin = accounts[1];
+        beneficiary = accounts[1];
     }
     console.log("Admin: " + admin);
     console.log("Beneficiary: " + beneficiary);
