@@ -63,7 +63,7 @@ contract QuantstampSale is Pausable {
 
     // Modifiers
     modifier beforeDeadline()   { require (currentTime() < endTime); _; }
-    modifier afterDeadline()    { require (currentTime() >= endTime); _; }
+    // modifier afterDeadline()    { require (currentTime() >= endTime); _; } no longer used without fundingGoal
     modifier afterStartTime()    { require (currentTime() >= startTime); _; }
 
     modifier saleNotClosed()    { require (!saleClosed); _; }
