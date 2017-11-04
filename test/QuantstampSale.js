@@ -44,7 +44,7 @@ contract('QuantstampSale constructor', function(accounts) {
       return {rate1, rate2, rate3, rate4};
   }
 
-  it("should sell tokens in the following order tier 3, tier 2, tier 1, tier 4", async function() {
+  it("should sell tokens in the following order tier 3, tier 2, tier 1, tier 4 (skipping tiers)", async function() {
       const tiers = await getTierRates();
       // tier caps for each of the users
       const tier1cap = 2, tier2cap = 3, tier3cap = 4, tier4cap = 5;
@@ -111,6 +111,45 @@ contract('QuantstampSale constructor', function(accounts) {
   it("should disallow unregistered users to buy tokens", async function() {
       await token.setCrowdsale(sale.address, 0);
       await util.expectThrow(sendTransaction(1, user5));
+  });
+
+  it("should sell tokens in the following order tier 3, tier 2, tier 1, tier 4 (not skipping tiers)", async function() {
+      const tiers = await getTierRates();
+      // tier caps for each of the users
+      const tier1cap = 1, tier2cap = 1, tier3cap = 1, tier4cap = 5;
+
+      await token.setCrowdsale(sale.address, 0);
+      await registerUser(user5, tier1cap, tier2cap, tier3cap, tier4cap);
+
+      // 1 ETH is well below the tier 3 cap
+      await sendTransaction(1, user5);
+      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3));
+
+      // Sending more ETH should fill tier 3 and 2
+      await sendTransaction(1, user5);
+      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2));
+
+      // test changing the caps in the middle (should not fail)
+      await registerUser(user5, 0, tier2cap, tier3cap, tier4cap);
+      await registerUser(user5, tier1cap, tier2cap, tier3cap, tier4cap);
+
+      await sendTransaction(1, user5);
+      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2 + tiers.rate1));
+
+      // tiers 2, 1, and 4
+      await sendTransaction(1, user5);
+      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2 + tiers.rate1 + tiers.rate4));
+      // forced to add to tier 4
+      await sendTransaction(1, user5);
+
+      // test changing the caps at the end (should not fail)
+      await registerUser(user5, tier1cap, tier2cap, tier3cap, 3);
+  });
+
+  it("should reach the cap", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await sendTransaction(1, user5);
+      assert.equal(await sale.fundingCapReached(), true);
   });
 
 /*

@@ -183,9 +183,8 @@ contract QuantstampSale is Pausable {
                 }
                 else{
                     balance = balance.sub(cap1[addr]);
-                    if(balance <= cap4[addr]){
-                        remaining4 = cap4[addr].sub(balance);
-                    }
+                    assert(balance <= cap4[addr]);
+                    remaining4 = cap4[addr].sub(balance);
                 }
             }
         }
@@ -504,15 +503,15 @@ contract QuantstampSale is Pausable {
 
 
     /**
+     * TODO: remove
      * Given an amount in QSP, this method returns the equivalent amount
      * in mini-QSP.
      *
      * @param amount    an amount expressed in units of QSP
      */
+     /*
     function convertToMiniQsp(uint amount) internal constant returns (uint) {
         return amount * (10 ** uint(tokenReward.decimals()));
     }
-
-
-
+    */
 }
