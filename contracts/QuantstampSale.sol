@@ -259,7 +259,7 @@ contract QuantstampSale is Pausable {
      * @param miniQspAmounts the amounts of tokens transferred in mini-QSP
      */
     function ownerAllocateTokensForList(address[] addrs, uint[] weiAmounts, uint[] miniQspAmounts)
-            onlyOwner nonReentrant
+            onlyOwner
     {
         require(addrs.length == weiAmounts.length);
         require(addrs.length == miniQspAmounts.length);
