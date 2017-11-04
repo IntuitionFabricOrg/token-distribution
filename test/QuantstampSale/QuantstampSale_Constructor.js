@@ -2,6 +2,8 @@ var QuantstampSale = artifacts.require("./QuantstampSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 
 var bigInt = require("big-integer");
+var util = require("../util.js");
+
 
 contract('QuantstampSale Constructor', function(accounts) {
   // account[0] points to the owner on the testRPC setup
@@ -45,6 +47,13 @@ contract('QuantstampSale Constructor', function(accounts) {
     assert.equal(fundingCapInEthers, 20 * (10 ** 18), "funding cap is incorrect");
     assert.equal(minimumContributionInWei, 1, "minimum contribution in wei is incorrect");
     assert.equal(start + 120, end, "end time should be 120 seconds after start time");
+  });
+
+  it("should not allow invalid parameters for a new sale", async function() {
+    let time = new Date().getTime() / 1000;
+    await util.expectThrow(QuantstampSale.new("0x0", 20, 1, time, 2, token.address));
+    await util.expectThrow(QuantstampSale.new(user1, 20, 1, time, 2, "0x0"));
+    await util.expectThrow(QuantstampSale.new(user1, 20, 1, time, 0, token.address));
   });
 
 });
