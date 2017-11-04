@@ -70,7 +70,7 @@ contract QuantstampSale is Pausable {
 
     // Modifiers
     modifier beforeDeadline()   { require (currentTime() < endTime); _; }
-    modifier afterDeadline()    { require (currentTime() >= endTime); _; }
+    // modifier afterDeadline()    { require (currentTime() >= endTime); _; } no longer used without fundingGoal
     modifier afterStartTime()    { require (currentTime() >= startTime); _; }
 
     modifier saleNotClosed()    { require (!saleClosed); _; }
@@ -328,7 +328,6 @@ contract QuantstampSale is Pausable {
         onlyOwner
     {
         require(registry[contributor]);
-        require(hasPreviouslyRegistered(contributor));
         registry[contributor] = false;
         RegistrationStatusChanged(contributor, false, cap1[contributor], cap2[contributor], cap3[contributor], cap4[contributor]);
 

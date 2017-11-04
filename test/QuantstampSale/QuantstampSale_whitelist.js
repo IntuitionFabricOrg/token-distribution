@@ -32,7 +32,7 @@ contract('Whitelist Crowdsale', function(accounts) {
     });
     });
 
-    it("should add user2 to the whitelist", async function() {
+    it("should add user2 to the whitelist, deactivate, and reactivate", async function() {
         // 0 indicates all crowdsale tokens
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
 
@@ -54,7 +54,20 @@ contract('Whitelist Crowdsale', function(accounts) {
 		assert.equal(r.logs[0].args.target, user2, "target is wrong");
 		assert.equal(r.logs[0].args.isRegistered, false, "isRegistered is wrong");
 
+		// cannot deactivate after already deactivating (already out of registry)
+        await util.expectThrow(sale.deactivate(user2,{from:owner}));
 
+		var r = await sale.reactivate(user2,{from:owner});
+		assert.equal(r.logs[0].event, 'RegistrationStatusChanged', "event is wrong");
+		assert.equal(r.logs[0].args.target, user2, "target is wrong");
+		assert.equal(r.logs[0].args.isRegistered, true, "isRegistered is wrong");
+
+
+    });
+
+    it("should not be able to reactivate a user that was never registered", async function() {
+        // 0 indicates all crowdsale tokens
+        await util.expectThrow(sale.reactivate(user3, {from:owner}));
     });
 
     it("should allow user2 to buy tokens up to their limit", async function() {
