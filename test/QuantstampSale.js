@@ -9,6 +9,8 @@ contract('QuantstampSale constructor', function(accounts) {
   var user1 = accounts[1];
   var user2 = accounts[2];
   var user3 = accounts[3];
+  var user4 = accounts[4];
+  var user5 = accounts[5];
 
   beforeEach(function() {
     return QuantstampSale.deployed().then(function(instance) {
@@ -20,54 +22,84 @@ contract('QuantstampSale constructor', function(accounts) {
     });
   });
 
-it("user should first get tokens from tier 3, then tier 2, then tier 1, then tier 4", async function() {
-    // ETH : QSP rates dependi on the tier
-    const tier1rate = (await sale.rate1()).toNumber();
-    const tier2rate = (await sale.rate2()).toNumber();
-    const tier3rate = (await sale.rate3()).toNumber();
-    const tier4rate = (await sale.rate4()).toNumber();
+  async function registerUser (user, cap1inETH, cap2inETH, cap3inETH, cap4inETH) {
+      await sale.registerUser(user,
+          util.toEther(cap1inETH), util.toEther(cap2inETH), util.toEther(cap3inETH), util.toEther(cap4inETH), {from : owner});
+  }
 
-    // tier caps for each of the users; 0-indexed
-    const tier1cap = 2, tier2cap = 3, tier3cap = 4, tier4cap = 5;
+  async function sendTransaction (value, user) {
+      await sale.sendTransaction({value : util.toEther(value), from : user});
+  }
 
-    await token.setCrowdsale(sale.address, 0);
+  async function balanceOf (user) {
+      return (await token.balanceOf(user)).toNumber();
+  }
 
-    await sale.registerUser(user2,
-        util.toEther(tier1cap), util.toEther(tier2cap), util.toEther(tier3cap), util.toEther(tier4cap), {from:owner});
+  // ETH : QSP rates depending on the tier
+  async function getTierRates () {
+      const rate1 = (await sale.rate1()).toNumber();
+      const rate2 = (await sale.rate2()).toNumber();
+      const rate3 = (await sale.rate3()).toNumber();
+      const rate4 = (await sale.rate4()).toNumber();
+      return {rate1, rate2, rate3, rate4};
+  }
 
-    // 1 ETH is well below the tier 3 cap
-    await sale.sendTransaction({value : util.toEther(1), from : user2});
-    assert.equal((await token.balanceOf(user2)).toNumber(), util.toQsp(tier3rate));
+  it("user should first get tokens from tier 3, then tier 2, then tier 1, then tier 4", async function() {
+      const tiers = await getTierRates();
+      // tier caps for each of the users
+      const tier1cap = 2, tier2cap = 3, tier3cap = 4, tier4cap = 5;
 
-    // Sending more ETH should fill tier 3 and 2
-    await sale.sendTransaction({value : util.toEther(4), from : user2});
-    assert.equal((await token.balanceOf(user2)).toNumber(), util.toQsp((tier3rate * tier3cap) + (tier2rate * 1)));
+      await token.setCrowdsale(sale.address, 0);
+      await registerUser(user2, tier1cap, tier2cap, tier3cap, tier4cap);
 
-    await sale.sendTransaction({value : util.toEther(1), from : user2});
-    assert.equal((await token.balanceOf(user2)).toNumber(), util.toQsp((tier3rate * tier3cap) + (tier2rate * 2)));
+      // 1 ETH is well below the tier 3 cap
+      await sendTransaction(1, user2);
+      assert.equal(await balanceOf(user2), util.toQsp(tiers.rate3));
 
-    // tiers 2, 1, and 4
-    await sale.sendTransaction({value : util.toEther(4), from : user2});
-    assert.equal((await token.balanceOf(user2)).toNumber(), util.toQsp(
-        (tier3rate * tier3cap) + (tier2rate * tier2cap) + (tier1rate * tier1cap) + (tier4rate * 1)
-    ));
-});
+      // Sending more ETH should fill tier 3 and 2
+      await sendTransaction(4, user2);
+      const maxQspTier3 = tiers.rate3 * tier3cap;
+      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * 1)));
 
-it("user should not be able to contribute more than allowed by the caps", async function() {
-    // ETH : QSP rates dependi on the tier
-    const tier1rate = (await sale.rate1()).toNumber();
-    const tier2rate = (await sale.rate2()).toNumber();
-    const tier3rate = (await sale.rate3()).toNumber();
-    const tier4rate = (await sale.rate4()).toNumber();
+      await sendTransaction(1, user2);
+      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * 2)));
 
-    // tier caps for each of the users; 0-indexed
-    const tier1cap = 0, tier2cap = 0, tier3cap = 0, tier4cap = 1;
+      // tiers 2, 1, and 4
+      await sendTransaction(4, user2);
+      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * tier2cap) + (tiers.rate1 * tier1cap) + (tiers.rate4 * 1)
+      ));
+  });
 
-    await token.setCrowdsale(sale.address, 0);
-    await sale.registerUser(user3,
-        util.toEther(tier1cap), util.toEther(tier2cap), util.toEther(tier3cap), util.toEther(tier4cap), {from:owner});
-    await util.expectThrow(sale.sendTransaction({value : util.toEther(2), from : user3}));    
-});
+  it("user should not be able to contribute more than allowed by the caps", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await registerUser(user3, 0, 0, 0, 1);
+      await util.expectThrow(sendTransaction(2, user3));    
+  });
+
+  it("user should not be able to contribute less than the min allowed amount of ETH", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      const minimumContributionInWei = (await sale.minContribution()).toNumber();
+      if (minimumContributionInWei > 0) {
+          await util.expectThrow(sendTransaction(minimumContributionInWei - 1, user3));
+      }
+  });
+
+  it("it should be possible to register the same user to update the caps if they don't conflict with contributions", async function() {
+      const tiers = await getTierRates();
+      await token.setCrowdsale(sale.address, 0);
+      
+      await registerUser(user4, 3, 0, 5, 1);
+      await sendTransaction(2, user4);
+      assert.equal(await balanceOf(user4), util.toQsp(2 * tiers.rate3));
+
+      // lower the tier 3 cap, increase tier 2 cap, don't change tier 1 cap
+      await registerUser(user4, 3, 1, 2, 1);
+      await sendTransaction(2, user4);
+      assert.equal(await balanceOf(user4), util.toQsp(2 * tiers.rate3 + tiers.rate2 + tiers.rate1));
+
+      // lower the tier 1 cap below the already accepted tier 1 contribution
+      await util.expectThrow(registerUser(user4, 0, 1, 2, 1));
+  });
 
 /*
   it("should be an allowance so that the crowdsale can transfer the tokens", async function() {
