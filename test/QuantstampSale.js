@@ -44,7 +44,7 @@ contract('QuantstampSale constructor', function(accounts) {
       return {rate1, rate2, rate3, rate4};
   }
 
-  it("user should first get tokens from tier 3, then tier 2, then tier 1, then tier 4", async function() {
+  it("should sell tokens in the following order tier 3, tier 2, tier 1, tier 4", async function() {
       const tiers = await getTierRates();
       // tier caps for each of the users
       const tier1cap = 2, tier2cap = 3, tier3cap = 4, tier4cap = 5;
@@ -53,30 +53,37 @@ contract('QuantstampSale constructor', function(accounts) {
       await registerUser(user2, tier1cap, tier2cap, tier3cap, tier4cap);
 
       // 1 ETH is well below the tier 3 cap
-      await sendTransaction(1, user2);
+      const contribution1 = 1;
+      await sendTransaction(contribution1, user2);
       assert.equal(await balanceOf(user2), util.toQsp(tiers.rate3));
+      assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1));
 
       // Sending more ETH should fill tier 3 and 2
-      await sendTransaction(4, user2);
+      const contribution2 = 4;
+      await sendTransaction(contribution2, user2);
       const maxQspTier3 = tiers.rate3 * tier3cap;
       assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * 1)));
+      assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2));
 
-      await sendTransaction(1, user2);
+      const contribution3 = 1;
+      await sendTransaction(contribution3, user2);
       assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * 2)));
+      assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2 + contribution3));
 
       // tiers 2, 1, and 4
-      await sendTransaction(4, user2);
-      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * tier2cap) + (tiers.rate1 * tier1cap) + (tiers.rate4 * 1)
-      ));
+      const contribution4 = 4;
+      await sendTransaction(contribution4, user2);
+      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * tier2cap) + (tiers.rate1 * tier1cap) + (tiers.rate4 * 1)));
+      assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2 + contribution3 + contribution4));
   });
 
-  it("user should not be able to contribute more than allowed by the caps", async function() {
+  it("should impossible to contribute more than allowed by the caps", async function() {
       await token.setCrowdsale(sale.address, 0);
       await registerUser(user3, 0, 0, 0, 1);
       await util.expectThrow(sendTransaction(2, user3));    
   });
 
-  it("user should not be able to contribute less than the min allowed amount of ETH", async function() {
+  it("should be impossible to contribute less than the min allowed amount of ETH", async function() {
       await token.setCrowdsale(sale.address, 0);
       const minimumContributionInWei = (await sale.minContribution()).toNumber();
       if (minimumContributionInWei > 0) {
@@ -84,7 +91,7 @@ contract('QuantstampSale constructor', function(accounts) {
       }
   });
 
-  it("it should be possible to register the same user to update the caps if they don't conflict with contributions", async function() {
+  it("should be possible to register the same user to update the caps if they don't conflict with contributions", async function() {
       const tiers = await getTierRates();
       await token.setCrowdsale(sale.address, 0);
       
@@ -99,6 +106,11 @@ contract('QuantstampSale constructor', function(accounts) {
 
       // lower the tier 1 cap below the already accepted tier 1 contribution
       await util.expectThrow(registerUser(user4, 0, 1, 2, 1));
+  });
+
+  it("should disallow unregistered users to buy tokens", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await util.expectThrow(sendTransaction(1, user5));
   });
 
 /*
@@ -124,63 +136,6 @@ contract('QuantstampSale constructor', function(accounts) {
 
 });
 
-contract('Multiple Crowdsales', function(accounts) {
-  // account[0] points to the owner on the testRPC setup
-  var owner = accounts[0];
-  var user1 = accounts[1];
-  var user2 = accounts[2];
-  var user3 = accounts[3];
-
-  beforeEach(function() {
-    return QuantstampSale.deployed().then(function(instance) {
-        sale = instance;
-        return QuantstampToken.deployed();
-    }).then(function(instance2){
-      token = instance2;
-      return token.INITIAL_SUPPLY();
-    }).then(function(val){
-      initialSupply = val.toNumber();
-      return sale.rate();
-    }).then(function(val){
-      rate = val.toNumber();
-      return QuantstampICO.deployed();
-    }).then(function(instance3){
-      ico = instance3;
-      return ico.rate();
-    }).then(function(val){
-      ico_rate = val.toNumber();
-    });
-  });
-
-
-
-  it("should accept 2 ether for the crowdfunding campaign", async function() {
-      let crowdSaleAllowance = (await token.crowdSaleSupply()).toNumber();
-      await token.setCrowdsale(sale.address, crowdSaleAllowance); // ensures crowdsale has allowance of tokens
-      let tokenOwner = await token.owner();
-      await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
-      let rate = 5000;
-      var amountEther = 2;
-      var amountWei = web3.toWei(amountEther, "ether");
-
-      let allowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
-      assert.equal(allowance, crowdSaleAllowance, "The allowance should be equal to the crowdsale allowance");
-
-      await sale.sendTransaction({from: user2,  value: web3.toWei(amountEther, "ether")});
-
-      let allowanceAfter = (await token.allowance(tokenOwner, sale.address)).toNumber();
-      let user2BalanceAfter = (await token.balanceOf(user2)).toNumber();
-      let ownerBalanceAfter = (await token.balanceOf(tokenOwner)).toNumber();
-
-      assert.equal(allowance - (amountWei * rate), ownerBalanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
-      assert.equal(user2BalanceAfter, amountWei * rate, "The user should have gained amountWei*rate miniQSP");
-      assert.equal(allowanceAfter + user2BalanceAfter, crowdSaleAllowance, "The total tokens should remain the same");
-  });
-
-});
-
-
-
 
 contract('QuantstampSale', function(accounts) {
   // account[0] points to the owner on the testRPC setup
@@ -188,38 +143,6 @@ contract('QuantstampSale', function(accounts) {
   var user1 = accounts[1];
   var user2 = accounts[2];
   var user3 = accounts[3];
-
-
-  it("should send 2 ether to the crowdfunding campaign", function(done) {
-      var amountEther = 2;
-      var amountRaisedAfterTransaction = web3.toWei(2, "ether");
-
-      QuantstampSale.deployed().then(function(instance) {
-          sale = instance;
-          // return quantstamp.send(web3.toWei(amountEther, "ether"));
-          return sale.sendTransaction({from: user3, value: web3.toWei(amountEther, "ether")})
-      }).then(function(result) {
-          return sale.amountRaised.call();
-      }).then(function(value){
-          console.log("amountRaised: " + value)
-          assert.equal(value, amountRaisedAfterTransaction, "AmountRaised is not equal to the amount transferred");
-      }).then(done).catch(done);
-  });
-
-  it("should send an additional 3 ether to the crowdfunding campaign", function(done) {
-      var amountEther = 3;
-      var amountRaisedAfterTransaction = web3.toWei(5, "ether");
-
-      QuantstampSale.deployed().then(function(instance) {
-          sale = instance;
-          return instance.sendTransaction({from: user2, value: web3.toWei(amountEther, "ether")});
-      }).then(function(){
-          return sale.amountRaised.call();
-      }).then(function(value){
-          console.log("amountRaised: " + value)
-          assert.equal(value, amountRaisedAfterTransaction, "AmountRaised is not equal to the amount transferred");
-      }).then(done).catch(done);
-  });
 
   it("should pause and not accept payment", function(done) {
       var amountEther = 6;
