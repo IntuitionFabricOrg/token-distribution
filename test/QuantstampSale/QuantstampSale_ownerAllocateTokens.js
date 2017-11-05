@@ -52,7 +52,7 @@ contract('QuantstampSale.ownerAllocateTokens:', function(accounts) {
 
     await sale.ownerAllocateTokens(user2, util.oneEther, util.oneEther, {from:owner});
 
-    await sale.ownerAllocateTokens(user3, util.hundredEther, util.oneEther, {from:owner});
+    await sale.ownerAllocateTokens(user3, util.twoEther, util.oneEther, {from:owner});
     let addrList = [user2, user3];
     let amtsList = [util.oneEther, util.twoEther];
     let user2_balance = await(sale.balanceOf(user2));

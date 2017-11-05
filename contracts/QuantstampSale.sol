@@ -137,12 +137,13 @@ contract QuantstampSale is Pausable {
         balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
         amountRaised = amountRaised.add(amount);
 
+        // Check if the funding goal or cap have been reached
+        // TODO check impact on gas cost
+        checkFundingCap();
+
         // Transfer the tokens from the crowdsale supply to the sender
         if (tokenReward.transferFrom(tokenReward.owner(), msg.sender, numTokens)) {
             FundTransfer(msg.sender, amount, true);
-            // Check if the funding goal or cap have been reached
-            // TODO check impact on gas cost
-            checkFundingCap();
         }
         else {
             revert();
@@ -483,12 +484,13 @@ contract QuantstampSale is Pausable {
      * the CapReached event is triggered.
      */
     function checkFundingCap() internal {
-        if (!fundingCapReached) {
-            if (amountRaised >= fundingCap) {
-                fundingCapReached = true;
-                saleClosed = true;
-                CapReached(beneficiary, amountRaised);
-            }
+        if (amountRaised > fundingCap) {
+            revert();
+        } else if (amountRaised == fundingCap) {
+            // Check if the funding cap have been reached
+            fundingCapReached = true;
+            saleClosed = true;
+            CapReached(beneficiary, amountRaised);
         }
     }
 

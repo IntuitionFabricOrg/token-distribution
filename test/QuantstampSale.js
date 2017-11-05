@@ -77,13 +77,13 @@ contract('QuantstampSale constructor', function(accounts) {
       assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2 + contribution3 + contribution4));
   });
 
-  it("should impossible to contribute more than allowed by the caps", async function() {
+  it("should not allow to contribute more than allowed by the caps", async function() {
       await token.setCrowdsale(sale.address, 0);
       await registerUser(user3, 0, 0, 0, 1);
       await util.expectThrow(sendTransaction(2, user3));    
   });
 
-  it("should be impossible to contribute less than the min allowed amount of ETH", async function() {
+  it("should not allow to contribute less than the min allowed amount of ETH", async function() {
       await token.setCrowdsale(sale.address, 0);
       const minimumContributionInWei = (await sale.minContribution()).toNumber();
       if (minimumContributionInWei > 0) {
@@ -91,7 +91,7 @@ contract('QuantstampSale constructor', function(accounts) {
       }
   });
 
-  it("should be possible to register the same user to update the caps if they don't conflict with contributions", async function() {
+  it("should allow to register the same user to update the caps if they don't conflict with contributions", async function() {
       const tiers = await getTierRates();
       await token.setCrowdsale(sale.address, 0);
       
@@ -146,10 +146,51 @@ contract('QuantstampSale constructor', function(accounts) {
       await registerUser(user5, tier1cap, tier2cap, tier3cap, 3);
   });
 
+   it("should not overflow the cap", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await registerUser(user5, 5, 5, 5, 5);
+      await util.expectThrow(sendTransaction(2, user5));
+  });
+
   it("should reach the cap", async function() {
       await token.setCrowdsale(sale.address, 0);
       await sendTransaction(1, user5);
       assert.equal(await sale.fundingCapReached(), true);
+  });
+
+   it("should reject transactions with 0 value", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await util.expectThrow(sendTransaction(0, user5));
+  });
+
+  it("should reject caps below the min contribution", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      const minimumContributionInWei = (await sale.minContribution()).toNumber();
+      await util.expectThrow(sale.registerUser(user3, minimumContributionInWei - 1, 0, 0, 0, {from : owner}));
+  });
+
+  it("should reject the address 0", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await util.expectThrow(registerUser(0, 1, 1, 1, 1));
+  });
+
+  it("should deactivate only registered addresses", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await util.expectThrow(sale.deactivate(accounts[6]));
+  });
+
+  it("should keep the balance constant before and after reactivation", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      const balance = await balanceOf(user2);
+      await sale.deactivate(user2);
+      await sale.reactivate(user2);
+      const balanceAfterReactivation = await balanceOf(user2);
+      assert.equal(balance, balanceAfterReactivation);
+  });
+
+  it("should reactivate only registered addresses", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await util.expectThrow(sale.reactivate(accounts[6]));
   });
 
 /*
