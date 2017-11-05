@@ -9,6 +9,8 @@ var Pausable = artifacts.require("./lifecycle/Pausable.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 var QuantstampSale = artifacts.require("./QuantstampSale.sol");
 
+var abi = require('ethereumjs-abi');
+
 
 module.exports = function(deployer, network, accounts) {
     //console.log("Accounts: " + accounts);
@@ -18,24 +20,51 @@ module.exports = function(deployer, network, accounts) {
     deployer.link(QuantstampToken, BurnableToken);
     deployer.link(QuantstampToken, SafeMath);
 
-    var time = new Date().getTime() / 1000;
+    var startTime = "";
     var admin = "";
     var beneficiary = "";
-    console.log("TIME: " + time);
+    var durationInMinutes = "";
+    var capInEther = "";
+    var minContributionInWei = "";
+
     if(network == "ropsten") {
         admin = "0x3d011185A327DbF81b65cB5502Ab33D02dee95F0";
         beneficiary = "0x26f77bD64d3CE2891906acB27d7ba09feB0C085b";
+        durationInMinutes = 1440; // 1 day
+        startTime = Math.round(new Date().getTime() / 1000);
+        capInEther = 20;
+        minContributionInWei = 1;
     }
     else { // "localhost" or "coverage"
         admin = accounts[1];
         beneficiary = accounts[1];
+        durationInMinutes = 5;
+        startTime = Math.round(new Date().getTime() / 1000);
+        capInEther = 20;
+        minContributionInWei = 1;
     }
+
     console.log("Admin: " + admin);
     console.log("Beneficiary: " + beneficiary);
+    console.log(startTime);
+
+    var abi_constructor_args_for_token = abi.rawEncode([ "address"],
+        [admin]).toString('hex');
+    console.log("------------------------------------------");
+    console.log("Use the following line for the QuantstampToken constructor arguments on etherscan:");
+    console.log(abi_constructor_args_for_token);
+    console.log("------------------------------------------");
 
     //used to be accounts[1] for both token and sale
     deployer.deploy(QuantstampToken, admin).then(function() {
-        return deployer.deploy(QuantstampSale, beneficiary, 20, 1, time, 2, QuantstampToken.address);
+        var abi_constructor_args_for_sale = abi.rawEncode([ "address", "uint", "uint", "uint", "uint", "address" ],
+        [ beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, QuantstampToken.address]).toString('hex');
+        console.log("------------------------------------------");
+        console.log("Use the following line for the QuantstampSale constructor arguments on etherscan:");
+        console.log(abi_constructor_args_for_sale);
+        console.log("------------------------------------------");
+
+        return deployer.deploy(QuantstampSale, beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, QuantstampToken.address);
     });
 
 
