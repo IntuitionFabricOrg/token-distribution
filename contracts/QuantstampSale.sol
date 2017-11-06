@@ -132,12 +132,11 @@ contract QuantstampSale is Pausable {
     function () payable whenNotPaused beforeDeadline afterStartTime saleNotClosed nonReentrant{
         require(msg.value >= minContribution);
         uint amount = msg.value;
-        uint currentBalanceOfSender = balanceOf[msg.sender];
 
         // ensure that the user adheres to whitelist restrictions
         require(registry[msg.sender]);
 
-        uint numTokens = computeTokenAmount(msg.sender, currentBalanceOfSender, amount);
+        uint numTokens = computeTokenAmount(msg.sender, amount);
         assert(numTokens > 0);
 
         // Update the sender's balance of wei contributed and the total amount raised
@@ -157,12 +156,15 @@ contract QuantstampSale is Pausable {
         }
     }
 
+
     /**
     * Computes the amount of QSP that should be issued for the given transaction.
     * Contribution tiers are filled up in the order 3, 2, 1, 4.
     */
-    function computeTokenAmount(address addr, uint balance, uint amount) internal
+    function computeTokenAmount(address addr, uint amount) internal
         returns (uint){
+        require(amount > 0);
+
         uint r3 = cap3[addr].sub(contributed3[addr]);
         uint r2 = cap2[addr].sub(contributed2[addr]);
         uint r1 = cap1[addr].sub(contributed1[addr]);
@@ -172,8 +174,8 @@ contract QuantstampSale is Pausable {
         if(r3 > 0){
             if(amount < r3){
                 numTokens = rate3.mul(amount);
-                amount = 0;
                 contributed3[addr] = contributed3[addr].add(amount);
+                amount = 0;
             }
             else{
                 numTokens = rate3.mul(r3);
@@ -184,20 +186,20 @@ contract QuantstampSale is Pausable {
         if(r2 > 0 && amount > 0){
             if(amount < r2){
                 numTokens = numTokens.add(rate2.mul(amount));
-                amount = 0;
                 contributed2[addr] = contributed2[addr].add(amount);
+                amount = 0;
             }
             else{
                 numTokens = numTokens.add(rate2.mul(r2));
-                amount = amount.sub(remaining2);
+                amount = amount.sub(r2);
                 contributed2[addr] = cap2[addr];
             }
         }
         if(r1 > 0 && amount > 0){
             if(amount < r1){
                 numTokens = numTokens.add(rate1.mul(amount));
-                amount = 0;
                 contributed1[addr] = contributed1[addr].add(amount);
+                amount = 0;
             }
             else{
                 numTokens = numTokens.add(rate1.mul(r1));
@@ -208,8 +210,8 @@ contract QuantstampSale is Pausable {
         if(r4 > 0 && amount > 0){
             if(amount < r4){
                 numTokens = numTokens.add(rate4.mul(amount));
-                amount = 0;
                 contributed4[addr] = contributed4[addr].add(amount);
+                amount = 0;
             }
             else{
                 numTokens = numTokens.add(rate4.mul(r4));
@@ -326,7 +328,7 @@ contract QuantstampSale is Pausable {
                            uint[] caps2,
                            uint[] caps3,
                            uint[] caps4)
-        public
+        external
         onlyOwner
         //only24HBeforeSale // TODO do we want this?
     {
@@ -361,7 +363,7 @@ contract QuantstampSale is Pausable {
      * @param miniQspAmounts the amounts of tokens transferred in mini-QSP
      */
     function ownerAllocateTokensForList(address[] addrs, uint[] weiAmounts, uint[] miniQspAmounts)
-            onlyOwner
+            external onlyOwner
     {
         require(addrs.length == weiAmounts.length);
         require(addrs.length == miniQspAmounts.length);

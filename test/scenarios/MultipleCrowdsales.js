@@ -1,7 +1,7 @@
 var QuantstampSale = artifacts.require("./QuantstampSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 var util = require("../util.js")
-var bigInt = require("bignumber.js");
+var bigInt = require("big-integer");
 
 contract('Multiple Crowdsales', function(accounts) {
     // account[0] points to the owner on the testRPC setup

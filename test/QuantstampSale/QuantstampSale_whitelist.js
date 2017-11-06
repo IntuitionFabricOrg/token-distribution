@@ -32,6 +32,22 @@ contract('Whitelist Crowdsale', function(accounts) {
     });
     });
 
+    async function getCaps (addr) {
+      const c1 = (await sale.cap1(addr)).toNumber();
+      const c2 = (await sale.cap2(addr)).toNumber();
+      const c3 = (await sale.cap3(addr)).toNumber();
+      const c4 = (await sale.cap4(addr)).toNumber();
+      return {c1, c2, c3, c4};
+    };
+
+    async function getContributions (addr) {
+      const c1 = (await sale.contributed1(addr)).toNumber();
+      const c2 = (await sale.contributed2(addr)).toNumber();
+      const c3 = (await sale.contributed3(addr)).toNumber();
+      const c4 = (await sale.contributed4(addr)).toNumber();
+      return {c1, c2, c3, c4};
+    };
+
     it("should add user2 to the whitelist, deactivate, and reactivate", async function() {
         // 0 indicates all crowdsale tokens
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
@@ -78,16 +94,32 @@ contract('Whitelist Crowdsale', function(accounts) {
 
         let user2Balance = (await token.balanceOf(user2)).toNumber();
 
+        const caps = await getCaps(user2);
+        console.log("CAPS: " + caps.c1 + " " + caps.c2 + " " + caps.c3 + " " + caps.c4);
+        const contributed = await getContributions(user2);
+        console.log("CTRB: " + contributed.c1 + " " + contributed.c2 + " " + contributed.c3 + " " + contributed.c4);
+
+
         await sale.sendTransaction({from: user2,  value: util.oneEther});
 
         let user2BalanceAfter1 = (await token.balanceOf(user2)).toNumber();
 
-        assert.equal(user2Balance + util.oneEther * 6000, user2BalanceAfter1, "token balance of user is incorrect");
+        const caps2 = await getCaps(user2);
+        console.log("CAPS: " + caps2.c1 + " " + caps2.c2 + " " + caps2.c3 + " " + caps2.c4);
+        const contributed2 = await getContributions(user2);
+        console.log("CTRB: " + contributed2.c1 + " " + contributed2.c2 + " " + contributed2.c3 + " " + contributed2.c4);
+
+        assert.equal(user2Balance + util.oneEther * 6000, user2BalanceAfter1, "token balance of user is incorrect 1");
         await sale.sendTransaction({from: user2,  value: util.oneEther});
 
         let user2BalanceAfter2 = (await token.balanceOf(user2)).toNumber();
 
-        assert.equal(user2Balance + util.twoEther * 6000, user2BalanceAfter2, "token balance of user is incorrect");
+        assert.equal(user2Balance + util.twoEther * 6000, user2BalanceAfter2, "token balance of user is incorrect 2");
+
+        const caps3 = await getCaps(user2);
+        console.log("CAPS: " + caps3.c1 + " " + caps3.c2 + " " + caps3.c3 + " " + caps3.c4);
+        const contributed3 = await getContributions(user2);
+        console.log("CTRB: " + contributed3.c1 + " " + contributed3.c2 + " " + contributed3.c3 + " " + contributed3.c4);
 
         // should now fail
         await util.expectThrow(sale.sendTransaction({from: user2,  value: util.oneEther}));
