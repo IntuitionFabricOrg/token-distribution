@@ -67,6 +67,9 @@ contract QuantstampSale is Pausable {
     // A map that tracks the amount of wei contributed by address
     mapping(address => uint256) public balanceOf;
 
+    // A map that tracks the amount of QSP tokens that should be allocated to each address
+    mapping(address => uint256) public tokenBalanceOf;
+
 
     // Events
     event GoalReached(address _beneficiary, uint _amountRaised);
@@ -148,13 +151,10 @@ contract QuantstampSale is Pausable {
         // TODO check impact on gas cost
         checkFundingCap();
 
-        // Transfer the tokens from the crowdsale supply to the sender
-        if (tokenReward.transferFrom(tokenReward.owner(), msg.sender, numTokens)) {
-            FundTransfer(msg.sender, amount, true);
-        }
-        else {
-            revert();
-        }
+        // add to the token balance of the sender
+        tokenBalanceOf[msg.sender] = tokenBalanceOf[msg.sender].add(numTokens);
+        FundTransfer(msg.sender, amount, true);
+
     }
 
     /**
@@ -326,7 +326,7 @@ contract QuantstampSale is Pausable {
                            uint[] caps2,
                            uint[] caps3,
                            uint[] caps4)
-        public
+        external
         onlyOwner
         //only24HBeforeSale // TODO do we want this?
     {
@@ -361,7 +361,7 @@ contract QuantstampSale is Pausable {
      * @param miniQspAmounts the amounts of tokens transferred in mini-QSP
      */
     function ownerAllocateTokensForList(address[] addrs, uint[] weiAmounts, uint[] miniQspAmounts)
-            onlyOwner
+            external onlyOwner
     {
         require(addrs.length == weiAmounts.length);
         require(addrs.length == miniQspAmounts.length);
@@ -386,9 +386,7 @@ contract QuantstampSale is Pausable {
     function ownerAllocateTokens(address _to, uint amountWei, uint amountMiniQsp)
             onlyOwner nonReentrant
     {
-        if (!tokenReward.transferFrom(tokenReward.owner(), _to, amountMiniQsp)) {
-            revert();
-        }
+        tokenBalanceOf[_to] = tokenBalanceOf[_to].add(amountMiniQsp);
         balanceOf[_to] = balanceOf[_to].add(amountWei);
         amountRaised = amountRaised.add(amountWei);
         FundTransfer(_to, amountWei, true);
@@ -406,6 +404,23 @@ contract QuantstampSale is Pausable {
         uint balanceToSend = this.balance;
         beneficiary.transfer(balanceToSend);
         FundTransfer(beneficiary, balanceToSend, false);
+    }
+
+    /**
+     * Once token transfers are enabled, allow users to obtain their tokens
+     *
+     * NOTE: if a new crowdsale is set, this will not work.
+     */
+    function obtainTokens(address addr)
+        external
+        nonReentrant
+    {
+        uint amount = tokenBalanceOf[addr];
+        tokenBalanceOf[addr] = 0;
+        // Transfer the tokens from the crowdsale supply to the sender
+        if (!tokenReward.transferFrom(tokenReward.owner(), msg.sender, amount)) {
+            revert();
+        }
     }
 
     /**
