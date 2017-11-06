@@ -46,7 +46,7 @@ contract('QuantstampSale Constructor', function(accounts) {
     assert.equal(ifSuccessfulSendTo, beneficiary, "beneficiary address is incorrect");
     assert.equal(fundingCapInEthers, 20 * (10 ** 18), "funding cap is incorrect");
     assert.equal(minimumContributionInWei, 1, "minimum contribution in wei is incorrect");
-    assert.equal(start + 120, end, "end time should be 120 seconds after start time");
+    assert.equal(start + 300, end, "end time should be 300 seconds after start time");
   });
 
   it("should not allow invalid parameters for a new sale", async function() {
