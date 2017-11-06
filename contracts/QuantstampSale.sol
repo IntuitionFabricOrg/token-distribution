@@ -35,6 +35,13 @@ contract QuantstampSale is Pausable {
     mapping(address => uint256) public cap3;        // 20% bonus
     mapping(address => uint256) public cap4;        // 0% bonus
 
+    // Stores the amount contributed for each tier for a given address
+    mapping(address => uint256) public contributed1;
+    mapping(address => uint256) public contributed2;
+    mapping(address => uint256) public contributed3;
+    mapping(address => uint256) public contributed4;
+
+
     // Conversion rate by tier (QSP : ETHER)
     uint public rate1 = 10000;
     uint public rate2 = 7000;
@@ -156,78 +163,58 @@ contract QuantstampSale is Pausable {
     */
     function computeTokenAmount(address addr, uint balance, uint amount) internal
         returns (uint){
-        uint remaining3 = 0;
-        uint remaining2 = 0;
-        uint remaining1 = 0;
-        uint remaining4 = 0;
+        uint r3 = cap3[addr].sub(contributed3[addr]);
+        uint r2 = cap2[addr].sub(contributed2[addr]);
+        uint r1 = cap1[addr].sub(contributed1[addr]);
+        uint r4 = cap4[addr].sub(contributed4[addr]);
         uint numTokens = 0;
 
-        // if/else tree to get the remaining cap for each tier
-        if(balance <= cap3[addr]){
-            remaining3 = cap3[addr].sub(balance);
-            remaining2 = cap2[addr];
-            remaining1 = cap1[addr];
-            remaining4 = cap4[addr];
-        }
-        else{
-            balance = balance.sub(cap3[addr]);
-            if(balance <= cap2[addr]){
-                remaining2 = cap2[addr].sub(balance);
-                remaining1 = cap1[addr];
-                remaining4 = cap4[addr];
-            }
-            else{
-                balance = balance.sub(cap2[addr]);
-                if(balance <= cap1[addr]){
-                    remaining1 = cap1[addr].sub(balance);
-                    remaining4 = cap4[addr];
-                }
-                else{
-                    balance = balance.sub(cap1[addr]);
-                    assert(balance <= cap4[addr]);
-                    remaining4 = cap4[addr].sub(balance);
-                }
-            }
-        }
-
-        if(remaining3 > 0){
-            if(amount < remaining3){
+        if(r3 > 0){
+            if(amount < r3){
                 numTokens = rate3.mul(amount);
                 amount = 0;
+                contributed3[addr] = contributed3[addr].add(amount);
             }
             else{
-                numTokens = rate3.mul(remaining3);
-                amount = amount.sub(remaining3);
+                numTokens = rate3.mul(r3);
+                amount = amount.sub(r3);
+                contributed3[addr] = cap3[addr];
             }
         }
-        if(remaining2 > 0 && amount > 0){
-            if(amount < remaining2){
+        if(r2 > 0 && amount > 0){
+            if(amount < r2){
                 numTokens = numTokens.add(rate2.mul(amount));
                 amount = 0;
+                contributed2[addr] = contributed2[addr].add(amount);
             }
             else{
-                numTokens = numTokens.add(rate2.mul(remaining2));
+                numTokens = numTokens.add(rate2.mul(r2));
                 amount = amount.sub(remaining2);
+                contributed2[addr] = cap2[addr];
             }
         }
-        if(remaining1 > 0 && amount > 0){
-            if(amount < remaining1){
+        if(r1 > 0 && amount > 0){
+            if(amount < r1){
                 numTokens = numTokens.add(rate1.mul(amount));
                 amount = 0;
+                contributed1[addr] = contributed1[addr].add(amount);
             }
             else{
-                numTokens = numTokens.add(rate1.mul(remaining1));
-                amount = amount.sub(remaining1);
+                numTokens = numTokens.add(rate1.mul(r1));
+                amount = amount.sub(r1);
+                contributed1[addr] = cap1[addr];
             }
         }
-        if(remaining4 > 0 && amount > 0){
-            if(amount < remaining4){
+        if(r4 > 0 && amount > 0){
+            if(amount < r4){
                 numTokens = numTokens.add(rate4.mul(amount));
                 amount = 0;
+                contributed4[addr] = contributed4[addr].add(amount);
             }
             else{
-                numTokens = numTokens.add(rate4.mul(remaining4));
-                amount = amount.sub(remaining4);
+                numTokens = numTokens.add(rate4.mul(r4));
+                amount = amount.sub(r4);
+                contributed4[addr] = cap4[addr];
             }
         }
 
@@ -261,31 +248,8 @@ contract QuantstampSale is Pausable {
         internal
         onlyOwner returns(bool)
     {
-        uint contributed_tier3 = 0;
-        uint contributed_tier2 = 0;
-        uint contributed_tier1 = 0;
-        uint contributed_tier4 = 0;
-
-        uint balance = balanceOf[addr];
-        if(balance <= cap3[addr]){
-            contributed_tier3 = balance;
-        }
-        else if(balance <= cap3[addr] + cap2[addr]){
-            contributed_tier3 = cap3[addr];
-            contributed_tier2 = balance - cap3[addr];
-        }
-        else if(balance <= cap3[addr] + cap2[addr] + cap1[addr]){
-            contributed_tier3 = cap3[addr];
-            contributed_tier2 = cap2[addr];
-            contributed_tier1 = balance - cap3[addr] - cap2[addr];
-        }
-        else{
-            contributed_tier3 = cap3[addr];
-            contributed_tier2 = cap2[addr];
-            contributed_tier1 = cap1[addr];
-            contributed_tier4 = balance - cap3[addr] - cap2[addr] - cap1[addr];
-        }
-        return (c3 >= contributed_tier3) && (c2 >= contributed_tier2) && (c1 >= contributed_tier1) && (c4 >= contributed_tier4);
+        return (contributed3[addr] <= c3) && (contributed2[addr] <= c2)
+            && (contributed1[addr] <= c1) && (contributed4[addr] <= c4);
     }
 
     /**
