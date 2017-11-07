@@ -55,9 +55,6 @@ contract QuantstampSale is Pausable {
     // Keeps track of the amount of wei raised
     uint public amountRaised;
 
-    // Refund amount, should it be required
-    // uint public refundAmount;
-
     // prevent certain functions from being recursively called
     bool private rentrancy_lock = false;
 
