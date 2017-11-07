@@ -59,7 +59,7 @@ contract QuantstampSale is Pausable {
     bool private rentrancy_lock = false;
 
     // The token being sold
-    QuantstampToken public tokenReward;
+    // QuantstampToken public tokenReward;
 
     // A map that tracks the amount of wei contributed by address
     mapping(address => uint256) public balanceOf;
@@ -96,25 +96,24 @@ contract QuantstampSale is Pausable {
      * @param minimumContributionInWei      minimum contribution (in wei)
      * @param start                         the start time (UNIX timestamp)
      * @param durationInMinutes             the duration of the crowdsale in minutes
-     * @param addressOfTokenUsedAsReward    address of the token being sold
      */
     function QuantstampSale(
         address ifSuccessfulSendTo,
         uint fundingCapInEthers,
         uint minimumContributionInWei,
         uint start,
-        uint durationInMinutes,
-        address addressOfTokenUsedAsReward
+        uint durationInMinutes
+        // address addressOfTokenUsedAsReward
     ) {
         require(ifSuccessfulSendTo != address(0) && ifSuccessfulSendTo != address(this));
-        require(addressOfTokenUsedAsReward != address(0) && addressOfTokenUsedAsReward != address(this));
+        //require(addressOfTokenUsedAsReward != address(0) && addressOfTokenUsedAsReward != address(this));
         require(durationInMinutes > 0);
         beneficiary = ifSuccessfulSendTo;
         fundingCap = fundingCapInEthers * 1 ether;
         minContribution = minimumContributionInWei;
         startTime = start;
         endTime = start + (durationInMinutes * 1 minutes);
-        tokenReward = QuantstampToken(addressOfTokenUsedAsReward);
+        // tokenReward = QuantstampToken(addressOfTokenUsedAsReward);
     }
 
     /**
@@ -228,6 +227,7 @@ contract QuantstampSale is Pausable {
      */
     function hasPreviouslyRegistered(address contributor)
         internal
+        constant
         onlyOwner returns (bool)
     {
         // if caps for this customer exist, then the customer has previously been registered
@@ -242,6 +242,7 @@ contract QuantstampSale is Pausable {
     */
     function validateUpdatedRegistration(address addr, uint c1, uint c2, uint c3, uint c4)
         internal
+        constant
         onlyOwner returns(bool)
     {
         return (contributed3[addr] <= c3) && (contributed2[addr] <= c2)
@@ -381,14 +382,14 @@ contract QuantstampSale is Pausable {
             onlyOwner nonReentrant
     {
         // don't allocate tokens for the admin
-        require(tokenReward.adminAddr() != _to);
-        
+        // require(tokenReward.adminAddr() != _to);
+
         amountRaised = amountRaised.add(amountWei);
         require(amountRaised <= fundingCap);
 
         tokenBalanceOf[_to] = tokenBalanceOf[_to].add(amountMiniQsp);
         balanceOf[_to] = balanceOf[_to].add(amountWei);
-        
+
         FundTransfer(_to, amountWei, true);
         updateFundingCap();
     }

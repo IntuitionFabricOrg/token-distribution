@@ -64,7 +64,7 @@ module.exports = function(deployer, network, accounts) {
         console.log(abi_constructor_args_for_sale);
         console.log("------------------------------------------");
 
-        return deployer.deploy(QuantstampSale, beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, QuantstampToken.address);
+        return deployer.deploy(QuantstampSale, beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes); //, QuantstampToken.address);
     });
 
 
