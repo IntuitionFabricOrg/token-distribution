@@ -102,7 +102,7 @@ contract('Whitelist Crowdsale', function(accounts) {
 
         await sale.sendTransaction({from: user2,  value: util.oneEther});
 
-        let user2BalanceAfter1 = (await token.balanceOf(user2)).toNumber();
+        let user2BalanceAfter1 = (await sale.tokenBalanceOf(user2)).toNumber();
 
         const caps2 = await getCaps(user2);
         console.log("CAPS: " + caps2.c1 + " " + caps2.c2 + " " + caps2.c3 + " " + caps2.c4);
@@ -112,7 +112,7 @@ contract('Whitelist Crowdsale', function(accounts) {
         assert.equal(user2Balance + util.oneEther * 6000, user2BalanceAfter1, "token balance of user is incorrect 1");
         await sale.sendTransaction({from: user2,  value: util.oneEther});
 
-        let user2BalanceAfter2 = (await token.balanceOf(user2)).toNumber();
+        let user2BalanceAfter2 = (await sale.tokenBalanceOf(user2)).toNumber();
 
         assert.equal(user2Balance + util.twoEther * 6000, user2BalanceAfter2, "token balance of user is incorrect 2");
 
@@ -123,7 +123,6 @@ contract('Whitelist Crowdsale', function(accounts) {
 
         // should now fail
         await util.expectThrow(sale.sendTransaction({from: user2,  value: util.oneEther}));
-
     });
 
 
@@ -143,9 +142,9 @@ contract('Whitelist Crowdsale', function(accounts) {
         let saleBalance6 = (await sale.balanceOf(user6)).toNumber();
 
 
-        let token4 = (await token.balanceOf(user4)).toNumber();
-        let token5 = (await token.balanceOf(user5)).toNumber();
-        let token6 = (await token.balanceOf(user6)).toNumber();
+        let token4 = (await sale.tokenBalanceOf(user4)).toNumber();
+        let token5 = (await sale.tokenBalanceOf(user5)).toNumber();
+        let token6 = (await sale.tokenBalanceOf(user6)).toNumber();
 
         assert.equal(saleBalance4, util.oneEther, "User4 sale balance is wrong");
         assert.equal(saleBalance5, util.oneEther, "User5 sale balance is wrong");
@@ -155,7 +154,6 @@ contract('Whitelist Crowdsale', function(accounts) {
         assert.equal(token4, 6000 * util.oneEther, "User4 token balance is wrong");
         assert.equal(token5, 6000 * util.oneEther, "User5 token balance is wrong");
         assert.equal(token6, 6000 * util.twoEther, "User6 token balance is wrong");
-
     });
 
     it("should not allow different size lists when changing many registration statuses", async function() {
