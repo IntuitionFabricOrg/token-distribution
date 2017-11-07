@@ -56,7 +56,7 @@ contract QuantstampSale is Pausable {
     uint public amountRaised;
 
     // Refund amount, should it be required
-    uint public refundAmount;
+    // uint public refundAmount;
 
     // prevent certain functions from being recursively called
     bool private rentrancy_lock = false;
@@ -116,10 +116,9 @@ contract QuantstampSale is Pausable {
         fundingCap = fundingCapInEthers * 1 ether;
         minContribution = minimumContributionInWei;
         startTime = start;
-        endTime = start + durationInMinutes * 1 minutes;
+        endTime = start + (durationInMinutes * 1 minutes);
         tokenReward = QuantstampToken(addressOfTokenUsedAsReward);
     }
-
 
     /**
      * This function is called whenever Ether is sent to the
@@ -131,7 +130,18 @@ contract QuantstampSale is Pausable {
      * tokens are transferred to the sender, and that the correct
      * number of tokens are sent according to the current rate.
      */
-    function () payable whenNotPaused beforeDeadline afterStartTime saleNotClosed nonReentrant{
+    function () payable {
+        buy();
+    }
+
+    function buy ()
+        payable public
+        whenNotPaused
+        beforeDeadline
+        afterStartTime
+        saleNotClosed
+        nonReentrant
+    {
         require(msg.value >= minContribution);
         uint amount = msg.value;
 
@@ -141,23 +151,24 @@ contract QuantstampSale is Pausable {
         uint numTokens = computeTokenAmount(msg.sender, amount);
         assert(numTokens > 0);
 
-        // Update the sender's balance of wei contributed and the total amount raised
-        balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
+        // update the total amount raised
         amountRaised = amountRaised.add(amount);
+        require(amountRaised <= fundingCap);
 
-        // Check if the funding goal or cap have been reached
-        // TODO check impact on gas cost
-        checkFundingCap();
-
+        // update the sender's balance of wei contributed
+        balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
         // add to the token balance of the sender
         tokenBalanceOf[msg.sender] = tokenBalanceOf[msg.sender].add(numTokens);
-        FundTransfer(msg.sender, amount, true);
 
+        FundTransfer(msg.sender, amount, true);
+        updateFundingCap();
     }
 
     /**
     * Computes the amount of QSP that should be issued for the given transaction.
     * Contribution tiers are filled up in the order 3, 2, 1, 4.
+    * @param addr      The wallet address of the contributor
+    * @param amount    Amount of wei for payment
     */
     function computeTokenAmount(address addr, uint amount) internal
         returns (uint){
@@ -169,11 +180,14 @@ contract QuantstampSale is Pausable {
         uint r4 = cap4[addr].sub(contributed4[addr]);
         uint numTokens = 0;
 
+        // cannot contribute more than the remaining sum
+        assert(amount <= r3.add(r2).add(r1).add(r4));
+
+        // Compute tokens for tier 3
         if(r3 > 0){
             if(amount <= r3){
-                numTokens = rate3.mul(amount);
                 contributed3[addr] = contributed3[addr].add(amount);
-                amount = 0;
+                return rate3.mul(amount);
             }
             else{
                 numTokens = rate3.mul(r3);
@@ -181,11 +195,11 @@ contract QuantstampSale is Pausable {
                 contributed3[addr] = cap3[addr];
             }
         }
-        if(r2 > 0 && amount > 0){
+        // Compute tokens for tier 2
+        if(r2 > 0){
             if(amount <= r2){
-                numTokens = numTokens.add(rate2.mul(amount));
                 contributed2[addr] = contributed2[addr].add(amount);
-                amount = 0;
+                return numTokens.add(rate2.mul(amount));
             }
             else{
                 numTokens = numTokens.add(rate2.mul(r2));
@@ -193,11 +207,11 @@ contract QuantstampSale is Pausable {
                 contributed2[addr] = cap2[addr];
             }
         }
-        if(r1 > 0 && amount > 0){
+        // Compute tokens for tier 1
+        if(r1 > 0){
             if(amount <= r1){
-                numTokens = numTokens.add(rate1.mul(amount));
                 contributed1[addr] = contributed1[addr].add(amount);
-                amount = 0;
+                return numTokens.add(rate1.mul(amount));
             }
             else{
                 numTokens = numTokens.add(rate1.mul(r1));
@@ -205,24 +219,9 @@ contract QuantstampSale is Pausable {
                 contributed1[addr] = cap1[addr];
             }
         }
-        if(r4 > 0 && amount > 0){
-            if(amount <= r4){
-                numTokens = numTokens.add(rate4.mul(amount));
-                contributed4[addr] = contributed4[addr].add(amount);
-                amount = 0;
-            }
-            else{
-                numTokens = numTokens.add(rate4.mul(r4));
-                amount = amount.sub(r4);
-                contributed4[addr] = cap4[addr];
-            }
-        }
-
-        if(amount > 0){
-            // the amount sent by the user is above their total cap
-            revert();
-        }
-        return numTokens;
+        // Compute tokens for tier 4 (overflow)
+        contributed4[addr] = contributed4[addr].add(amount);
+        return numTokens.add(rate4.mul(amount));
     }
 
     /**
@@ -346,7 +345,6 @@ contract QuantstampSale is Pausable {
         saleClosed = true;
     }
 
-
     /**
      * The owner can allocate the specified amount of tokens from the
      * crowdsale allowance to the recipient addresses.
@@ -368,8 +366,6 @@ contract QuantstampSale is Pausable {
         }
     }
 
-
-
     /**
      *
      * The owner can allocate the specified amount of tokens from the
@@ -387,11 +383,14 @@ contract QuantstampSale is Pausable {
     function ownerAllocateTokens(address _to, uint amountWei, uint amountMiniQsp)
             onlyOwner nonReentrant
     {
+        amountRaised = amountRaised.add(amountWei);
+        require(amountRaised <= fundingCap);
+
         tokenBalanceOf[_to] = tokenBalanceOf[_to].add(amountMiniQsp);
         balanceOf[_to] = balanceOf[_to].add(amountWei);
-        amountRaised = amountRaised.add(amountWei);
+        
         FundTransfer(_to, amountWei, true);
-        checkFundingCap();
+        updateFundingCap();
     }
 
 
@@ -446,11 +445,10 @@ contract QuantstampSale is Pausable {
      * Checks if the funding cap has been reached. If it has, then
      * the CapReached event is triggered.
      */
-    function checkFundingCap() internal {
-        if (amountRaised > fundingCap) {
-            revert();
-        } else if (amountRaised == fundingCap) {
-            // Check if the funding cap have been reached
+    function updateFundingCap() internal {
+        assert (amountRaised <= fundingCap);
+        if (amountRaised == fundingCap) {
+            // Check if the funding cap has been reached
             fundingCapReached = true;
             saleClosed = true;
             CapReached(beneficiary, amountRaised);

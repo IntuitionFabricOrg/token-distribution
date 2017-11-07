@@ -36,7 +36,7 @@ contract('QSP-11: Owner withdrawal', function(accounts) {
         assert.equal(amountRaised, amt);
 
         let beneficiary = await sale.beneficiary();
-        let beforeBalance = web3.eth.getBalance(beneficiary);
+        let beforeBalance = web3.eth.getBalance(beneficiary).toNumber();
 
         // can owner can withdraw funds?
         await sale.ownerSafeWithdrawal();

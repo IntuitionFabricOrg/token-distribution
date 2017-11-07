@@ -31,8 +31,12 @@ contract('QuantstampSale constructor', function(accounts) {
       await sale.sendTransaction({value : util.toEther(value), from : user});
   }
 
+  async function tokenBalanceOf (user) {
+      return (await sale.tokenBalanceOf(user)).toNumber();
+  }
+
   async function balanceOf (user) {
-      return (await token.balanceOf(user)).toNumber();
+      return (await sale.balanceOf(user)).toNumber();
   }
 
   // ETH : QSP rates depending on the tier
@@ -55,25 +59,29 @@ contract('QuantstampSale constructor', function(accounts) {
       // 1 ETH is well below the tier 3 cap
       const contribution1 = 1;
       await sendTransaction(contribution1, user2);
-      assert.equal(await balanceOf(user2), util.toQsp(tiers.rate3));
+      assert.equal(await tokenBalanceOf(user2), util.toQsp(tiers.rate3));
+      assert.equal(await balanceOf(user2), util.toEther(contribution1));
       assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1));
 
       // Sending more ETH should fill tier 3 and 2
       const contribution2 = 4;
       await sendTransaction(contribution2, user2);
       const maxQspTier3 = tiers.rate3 * tier3cap;
-      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * 1)));
+      assert.equal(await tokenBalanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * 1)));
+      assert.equal(await balanceOf(user2), util.toEther(contribution1 + contribution2));
       assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2));
 
       const contribution3 = 1;
       await sendTransaction(contribution3, user2);
-      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * 2)));
+      assert.equal(await tokenBalanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * 2)));
+      assert.equal(await balanceOf(user2), util.toEther(contribution1 + contribution2 + contribution3));
       assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2 + contribution3));
 
       // tiers 2, 1, and 4
       const contribution4 = 4;
       await sendTransaction(contribution4, user2);
-      assert.equal(await balanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * tier2cap) + (tiers.rate1 * tier1cap) + (tiers.rate4 * 1)));
+      assert.equal(await tokenBalanceOf(user2), util.toQsp(maxQspTier3 + (tiers.rate2 * tier2cap) + (tiers.rate1 * tier1cap) + (tiers.rate4 * 1)));
+      assert.equal(await balanceOf(user2), util.toEther(contribution1 + contribution2 + contribution3 + contribution4));
       assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2 + contribution3 + contribution4));
   });
 
@@ -97,12 +105,12 @@ contract('QuantstampSale constructor', function(accounts) {
       
       await registerUser(user4, 3, 0, 5, 1);
       await sendTransaction(2, user4);
-      assert.equal(await balanceOf(user4), util.toQsp(2 * tiers.rate3));
+      assert.equal(await tokenBalanceOf(user4), util.toQsp(2 * tiers.rate3));
 
       // lower the tier 3 cap, increase tier 2 cap, don't change tier 1 cap
       await registerUser(user4, 3, 1, 2, 1);
       await sendTransaction(2, user4);
-      assert.equal(await balanceOf(user4), util.toQsp(2 * tiers.rate3 + tiers.rate2 + tiers.rate1));
+      assert.equal(await tokenBalanceOf(user4), util.toQsp(2 * tiers.rate3 + tiers.rate2 + tiers.rate1));
 
       // lower the tier 1 cap below the already accepted tier 1 contribution
       await util.expectThrow(registerUser(user4, 0, 1, 2, 1));
@@ -123,22 +131,22 @@ contract('QuantstampSale constructor', function(accounts) {
 
       // 1 ETH is well below the tier 3 cap
       await sendTransaction(1, user5);
-      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3));
+      assert.equal(await tokenBalanceOf(user5), util.toQsp(tiers.rate3));
 
       // Sending more ETH should fill tier 3 and 2
       await sendTransaction(1, user5);
-      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2));
+      assert.equal(await tokenBalanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2));
 
       // test changing the caps in the middle (should not fail)
       await registerUser(user5, 0, tier2cap, tier3cap, tier4cap);
       await registerUser(user5, tier1cap, tier2cap, tier3cap, tier4cap);
 
       await sendTransaction(1, user5);
-      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2 + tiers.rate1));
+      assert.equal(await tokenBalanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2 + tiers.rate1));
 
       // tiers 2, 1, and 4
       await sendTransaction(1, user5);
-      assert.equal(await balanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2 + tiers.rate1 + tiers.rate4));
+      assert.equal(await tokenBalanceOf(user5), util.toQsp(tiers.rate3 + tiers.rate2 + tiers.rate1 + tiers.rate4));
       // forced to add to tier 4
       await sendTransaction(1, user5);
 
@@ -181,10 +189,10 @@ contract('QuantstampSale constructor', function(accounts) {
 
   it("should keep the balance constant before and after reactivation", async function() {
       await token.setCrowdsale(sale.address, 0);
-      const balance = await balanceOf(user2);
+      const balance = await tokenBalanceOf(user2);
       await sale.deactivate(user2);
       await sale.reactivate(user2);
-      const balanceAfterReactivation = await balanceOf(user2);
+      const balanceAfterReactivation = await tokenBalanceOf(user2);
       assert.equal(balance, balanceAfterReactivation);
   });
 

@@ -32,10 +32,8 @@ contract('QuantstampSale Constructor', function(accounts) {
     assert.equal(token.address, tokenReward);
 
     let amountRaised              = (await sale.amountRaised()).toNumber();
-    let refundAmount              = (await sale.refundAmount()).toNumber();
 
     assert.equal(amountRaised, 0);
-    assert.equal(refundAmount, 0);
 
     let ifSuccessfulSendTo        = await sale.beneficiary();
     let fundingCapInEthers        = (await sale.fundingCap()).toNumber();
