@@ -37,13 +37,13 @@ contract('QuantstampSale.ownerAllocateTokens:', function(accounts) {
     await util.expectThrow(sale.ownerAllocateTokensForList(addrList, amtsList, amtsList, {from:user2}));
   });
 
-  it("should not transfers to administrative acccounts", async function() {
-    await util.expectThrow(sale.ownerAllocateTokens(user1, util.oneEther, util.twoEther, {from:owner}));
-    await util.expectThrow(sale.ownerAllocateTokens(user1, util.oneEther, util.twoEther, {from:owner}));
-    let addrList = [user1, user3];
-    let amtsList = [util.oneEther, util.twoEther];
-    await util.expectThrow(sale.ownerAllocateTokensForList(addrList, amtsList, amtsList, {from:owner}));
-  });
+  //it("should not transfers to administrative acccounts", async function() {
+  //  await util.expectThrow(sale.ownerAllocateTokens(user1, util.oneEther, util.twoEther, {from:owner}));
+  //  await util.expectThrow(sale.ownerAllocateTokens(user1, util.oneEther, util.twoEther, {from:owner}));
+  //  let addrList = [user1, user3];
+  //  let amtsList = [util.oneEther, util.twoEther];
+  //  await util.expectThrow(sale.ownerAllocateTokensForList(addrList, amtsList, amtsList, {from:owner}));
+  //});
 
   it("should allow transfers to registered users, even beyond caps", async function(){
     let caps = [util.oneEther, util.oneEther, util.oneEther, util.twoEther];

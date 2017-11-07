@@ -28,8 +28,8 @@ contract('QuantstampSale Constructor', function(accounts) {
   it("should have the correct parameters, and calculate the end time correctly", async function() {
     let beneficiary = accounts[1];
 
-    let tokenReward               = await sale.tokenReward();
-    assert.equal(token.address, tokenReward);
+    //let tokenReward               = await sale.tokenReward();
+    //assert.equal(token.address, tokenReward);
 
     let amountRaised              = (await sale.amountRaised()).toNumber();
 

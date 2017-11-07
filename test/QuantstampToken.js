@@ -130,7 +130,7 @@ contract('QuantstampToken (Basic Tests)', function(accounts) {
 
     it("should not allow any crowdsales after transfers have been enabled", async function() {
         var time = new Date().getTime() / 1000;
-        var sale2 = await QuantstampSale.new(accounts[1], 20, 1, time, 2, token.address);
+        var sale2 = await QuantstampSale.new(accounts[1], 20, 1, time, 2); //, token.address);
         await util.expectThrow(token.setCrowdsale(sale2.address, 0));
     });
 });
