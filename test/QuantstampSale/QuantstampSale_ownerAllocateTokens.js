@@ -56,11 +56,11 @@ contract('QuantstampSale.ownerAllocateTokens:', function(accounts) {
     let addrList = [user2, user3];
     let amtsList = [util.oneEther, util.twoEther];
     let user2_balance = await(sale.balanceOf(user2));
-    let user2_token_balance = await(token.balanceOf(user2));
+    let user2_token_balance = await(sale.balanceOf(user2));
     await sale.ownerAllocateTokensForList(addrList, amtsList, amtsList, {from:owner});
     let reached_cap = await sale.fundingCapReached();
     let user2_balance_after = await(sale.balanceOf(user2));
-    let user2_token_balance_after = await(token.balanceOf(user2));
+    let user2_token_balance_after = await(sale.balanceOf(user2));
     console.log(user2_balance.add(util.oneEther) + " " + user2_balance_after + " " + reached_cap);
     assert.equal(user2_balance.add(util.oneEther).toNumber(), user2_balance_after.toNumber(), "user2 ether balance should have increased by 1");
     assert.equal(user2_token_balance.add(util.oneEther).toNumber(), user2_token_balance_after.toNumber(), "user2 token balance should have increased by 1");

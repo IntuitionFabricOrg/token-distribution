@@ -380,6 +380,9 @@ contract QuantstampSale is Pausable {
     function ownerAllocateTokens(address _to, uint amountWei, uint amountMiniQsp)
             onlyOwner nonReentrant
     {
+        // don't allocate tokens for the admin
+        require(tokenReward.adminAddr() != _to);
+        
         amountRaised = amountRaised.add(amountWei);
         require(amountRaised <= fundingCap);
 
