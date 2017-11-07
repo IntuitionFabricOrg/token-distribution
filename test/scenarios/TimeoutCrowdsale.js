@@ -38,17 +38,17 @@ contract('Missed-deadline Crowdsale', function(accounts) {
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
         await sale.registerUser(user2, util.hundredEther, util.hundredEther,
             util.hundredEther, util.hundredEther, {from:owner});
-        let allowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
+        //let allowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
 
         await sale.sendTransaction({from: user2,  value: util.twoEther});
 
-        let allowanceAfter = (await token.allowance(tokenOwner, sale.address)).toNumber();
-        let user2BalanceAfter = (await token.balanceOf(user2)).toNumber();
-        let ownerBalanceAfter = (await token.balanceOf(owner)).toNumber();
+        //let allowanceAfter = (await token.allowance(tokenOwner, sale.address)).toNumber();
+        let user2BalanceAfter = (await sale.tokenBalanceOf(user2)).toNumber();
+        let ownerBalanceAfter = (await sale.tokenBalanceOf(owner)).toNumber();
 
-        assert.equal(allowance - (util.twoEther * 6000), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
+        //assert.equal(allowance - (util.twoEther * 6000), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
         assert.equal(user2BalanceAfter, util.twoEther * 6000, "The user should have gained amountWei*rate miniQSP");
-        assert.equal(allowanceAfter + user2BalanceAfter, allowance, "The total tokens should remain the same");
+        //assert.equal(allowanceAfter + user2BalanceAfter, allowance, "The total tokens should remain the same");
     });
 
     it("should not allow the purchase of tokens if the deadline is reached", async function() {

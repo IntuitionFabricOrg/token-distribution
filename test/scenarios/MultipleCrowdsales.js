@@ -36,36 +36,36 @@ contract('Multiple Crowdsales', function(accounts) {
         await sale.registerUser(user2, util.hundredEther, util.hundredEther,
             util.hundredEther, util.hundredEther, {from:owner});
 
-        let allowance = (await token.allowance(tokenOwner, sale.address));
+        //let allowance = (await token.allowance(tokenOwner, sale.address));
 
         await sale.sendTransaction({from: user2,  value: util.twoEther});
 
-        let allowanceAfter = (await token.allowance(tokenOwner, sale.address));
-        let user2BalanceAfter = (await token.balanceOf(user2));
-        let ownerBalanceAfter = (await token.balanceOf(owner));
-        let subbedAllowance = allowance.minus(util.twoEther * 6000);
+        //let allowanceAfter = (await token.allowance(tokenOwner, sale.address));
+        let user2BalanceAfter = (await sale.tokenBalanceOf(user2));
+        let ownerBalanceAfter = (await sale.tokenBalanceOf(owner));
+        //let subbedAllowance = allowance.minus(util.twoEther * 6000);
 
-        assert.equal(subbedAllowance.toNumber(), allowanceAfter.toNumber(), "The crowdsale should have sent amountWei*rate miniQSP");
+        //assert.equal(subbedAllowance.toNumber(), allowanceAfter.toNumber(), "The crowdsale should have sent amountWei*rate miniQSP");
 
         assert.equal(user2BalanceAfter, (util.twoEther * 6000), "The user should have gained amountWei*rate miniQSP");
-        assert.equal((allowanceAfter.plus(user2BalanceAfter)).toNumber(), allowance.toNumber(), "The total tokens should remain the same");
+        //assert.equal((allowanceAfter.plus(user2BalanceAfter)).toNumber(), allowance.toNumber(), "The total tokens should remain the same");
     });
 
     it("should accept another 10 ether", async function() {
         var amountEther = 10;
         var amountWei = web3.toWei(amountEther, "ether");
 
-        let allowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
+        //let allowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
 
         await sale.sendTransaction({from: user2,  value: web3.toWei(amountEther, "ether")});
 
-        let allowanceAfter = (await token.allowance(tokenOwner, sale.address)).toNumber();
-        let user2BalanceAfter = (await token.balanceOf(user2)).toNumber();
-        let ownerBalanceAfter = (await token.balanceOf(tokenOwner)).toNumber();
+        //let allowanceAfter = (await token.allowance(tokenOwner, sale.address)).toNumber();
+        let user2BalanceAfter = (await sale.tokenBalanceOf(user2)).toNumber();
+        let ownerBalanceAfter = (await sale.tokenBalanceOf(tokenOwner)).toNumber();
 
-        assert.equal(allowance - (amountWei * 6000), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
+        //assert.equal(allowance - (amountWei * 6000), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
         assert.equal(user2BalanceAfter, web3.toWei(12, "ether") * 6000, "The user should have gained amountWei*rate miniQSP");
-        assert.equal(allowanceAfter + user2BalanceAfter, crowdsaleSupply, "The total tokens should remain the same");
+        //assert.equal(allowanceAfter + user2BalanceAfter, crowdsaleSupply, "The total tokens should remain the same");
     });
 
     it("should transfer the ether balance of the sale crowdsale back to the owner", async function() {
@@ -93,28 +93,27 @@ contract('Multiple Crowdsales', function(accounts) {
         assert.equal(saleAllowance, 0, "The old crowdsale should have zero allowance");
         assert.isAbove(sale2Allowance, 0, "The new crowdsale should have an allowance greater than zero");
         assert.equal(sale2Allowance, crowdsaleAllowance, "The new crowdsale should have a balance equal to the current allowance");
-        assert.isBelow(sale2Allowance, crowdsaleSupply, "The new crowdsale should have a balance less than the supply");
+        //assert.isBelow(sale2Allowance, crowdsaleSupply, "The new crowdsale should have a balance less than the supply");
     });
 
-    it("should accept 2 ether for the new crowdsale", async function() {
-        let allowance = (await token.allowance(tokenOwner, sale2.address));
+    it("should accept 2 more ether for the new crowdsale", async function() {
 
-        let user2Balance = (await token.balanceOf(user2)).toNumber();
+        let user2Balance = (await sale2.tokenBalanceOf(user2)).toNumber();
         await sale2.registerUser(user2, util.hundredEther, util.hundredEther,
             util.hundredEther, util.hundredEther, {from:owner});
         await sale2.sendTransaction({from: user2,  value: util.twoEther});
 
-        let allowanceAfter = (await token.allowance(tokenOwner, sale2.address));
-        let user2BalanceAfter = (await token.balanceOf(user2)).toNumber();
-        let ownerBalanceAfter = (await token.balanceOf(owner)).toNumber();
+        //let allowanceAfter = (await token.allowance(tokenOwner, sale2.address));
+        let user2BalanceAfter = (await sale2.tokenBalanceOf(user2)).toNumber();
+        let ownerBalanceAfter = (await sale2.tokenBalanceOf(owner)).toNumber();
 
         let weiTransferred = (util.twoEther * 6000);
 
-        let sum = new bigInt(allowanceAfter).add(weiTransferred);
+        //let sum = new bigInt(allowanceAfter).add(weiTransferred);
 
         //assert.equal(allowance - diff, allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
         assert.equal(user2BalanceAfter, user2Balance + (util.twoEther * 6000), "The user should have gained amountWei*rate miniQSP");
-        assert.equal(sum.toNumber(), allowance, "The total tokens should remain the same");
+        //assert.equal(sum.toNumber(), allowance, "The total tokens should remain the same");
     });
 
 });

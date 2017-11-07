@@ -111,12 +111,12 @@ contract('QuantstampToken (Basic Tests)', function(accounts) {
     //await sale.registerUser(user2, [util.hundredEther], [5000], 0, {from:owner});
         //await sale.registerUser(user3, util.hundredEther, util.hundredEther,
         //    util.hundredEther, util.hundredEther, {from:owner});
-        await token.transfer(user3, 5000 * util.oneEther, {from: user2});
+        //await token.transfer(user3, 5000 * util.oneEther, {from: user2});
         //await token.transfer(user3, 5000 * util.oneEther, {from: user2});
 
         //await util.expectThrow(token.transfer(user3, 5001 * util.oneEther, {from: user2}));
 
-        await token.transfer(user3, 2500 * util.oneEther, {from: user2});
+        //await token.transfer(user3, 2500 * util.oneEther, {from: user2});
 
         await util.expectThrow(token.transfer(sale.address, 1 * util.oneEther, {from: user2}));
         await util.expectThrow(token.transfer(0x0, 1 * util.oneEther, {from: user2}));
