@@ -81,4 +81,10 @@ contract('QuantstampSale.ownerAllocateTokens:', function(accounts) {
   });
 
 
+  it("should not allow to raise more funds than the cap", async function(){
+    await sale.registerUser(user2, util.hundredEther, util.hundredEther, util.hundredEther, util.hundredEther);
+    await util.expectThrow(sale.ownerAllocateTokens(user2, util.hundredEther, util.oneEther, {from:owner}));
+  });  
+
+
 });
