@@ -227,6 +227,7 @@ contract QuantstampSale is Pausable {
      */
     function hasPreviouslyRegistered(address contributor)
         internal
+        constant
         onlyOwner returns (bool)
     {
         // if caps for this customer exist, then the customer has previously been registered
@@ -241,6 +242,7 @@ contract QuantstampSale is Pausable {
     */
     function validateUpdatedRegistration(address addr, uint c1, uint c2, uint c3, uint c4)
         internal
+        constant
         onlyOwner returns(bool)
     {
         return (contributed3[addr] <= c3) && (contributed2[addr] <= c2)
