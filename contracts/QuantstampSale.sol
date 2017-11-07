@@ -4,7 +4,7 @@ pragma solidity ^0.4.15;
 
 import './lifecycle/Pausable.sol';
 import './math/SafeMath.sol';
-import './QuantstampToken.sol';
+// import './QuantstampToken.sol';
 
 /**
  * The QuantstampSale smart contract is used for selling QuantstampToken
