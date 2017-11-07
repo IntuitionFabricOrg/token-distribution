@@ -371,8 +371,11 @@ contract QuantstampSale is Pausable {
 
 
     /**
+     *
      * The owner can allocate the specified amount of tokens from the
      * crowdsale allowance to the recipient (_to).
+     *
+     *
      *
      * NOTE: be extremely careful to get the amounts correct, which
      * are in units of wei and mini-QSP. Every digit counts.
@@ -402,23 +405,6 @@ contract QuantstampSale is Pausable {
         uint balanceToSend = this.balance;
         beneficiary.transfer(balanceToSend);
         FundTransfer(beneficiary, balanceToSend, false);
-    }
-
-    /**
-     * Once token transfers are enabled, allow users to obtain their tokens
-     *
-     * NOTE: if a new crowdsale is set, this will not work.
-     */
-    function obtainTokens()
-        external
-        nonReentrant
-    {
-        uint amount = tokenBalanceOf[msg.sender];
-        tokenBalanceOf[msg.sender] = 0;
-        // Transfer the tokens from the crowdsale supply to the sender
-        if (!tokenReward.transferFrom(tokenReward.owner(), msg.sender, amount)) {
-            revert();
-        }
     }
 
     /**
