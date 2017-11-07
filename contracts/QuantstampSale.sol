@@ -407,40 +407,6 @@ contract QuantstampSale is Pausable {
         FundTransfer(beneficiary, balanceToSend, false);
     }
 
-    /**
-     * TODO: remove
-     * The owner can unlock the fund with this function. The use-
-     * case for this is when the owner decides after the deadline
-     * to allow contributors to be refunded their contributions.
-     * Note that the fund would be automatically unlocked if the
-     * minimum funding goal were not reached.
-     */
-    /*
-    function ownerUnlockFund() external afterDeadline onlyOwner {
-        fundingGoalReached = false;
-    }
-    */
-
-    /**
-     * TODO: remove?
-     * This function permits anybody to withdraw the funds they have
-     * contributed if and only if the deadline has passed and the
-     * funding goal was not reached.
-     */
-    /*
-    function safeWithdrawal() external afterDeadline nonReentrant {
-        if (!fundingGoalReached) {
-            uint amount = balanceOf[msg.sender];
-            balanceOf[msg.sender] = 0;
-            if (amount > 0) {
-                msg.sender.transfer(amount);
-                FundTransfer(msg.sender, amount, false);
-                refundAmount = refundAmount.add(amount);
-            }
-        }
-    }
-    */
-
 
     /**
      * Checks if the funding cap has been reached. If it has, then
@@ -464,18 +430,4 @@ contract QuantstampSale is Pausable {
     function currentTime() constant returns (uint _currentTime) {
         return now;
     }
-
-
-    /**
-     * TODO: remove
-     * Given an amount in QSP, this method returns the equivalent amount
-     * in mini-QSP.
-     *
-     * @param amount    an amount expressed in units of QSP
-     */
-     /*
-    function convertToMiniQsp(uint amount) internal constant returns (uint) {
-        return amount * (10 ** uint(tokenReward.decimals()));
-    }
-    */
 }
