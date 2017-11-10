@@ -102,8 +102,8 @@ contract('ExtendedQuantstampSale constructor', function(accounts) {
       assert.equal((await sale.amountRaised()).toNumber(), util.toEther(contribution1 + contribution2 + contribution3 + contribution4));
 
       const contribution5 = 2;
-      await sendTransaction(contribution5, user2);
- 	  //assert.equal((await extendedSale.balanceOf(user2)).toNumber(), util.toEther(contribution5));
+      await sendTransactionExtended(contribution5, user2);
+ 	  assert.equal((await extendedSale.balanceOf(user2)).toNumber(), util.toEther(contribution5));
       assert.equal(await balanceOfExtended(user2), util.toEther(contribution1 + contribution2 + contribution3 + contribution4 + contribution5));
   });
 /*
