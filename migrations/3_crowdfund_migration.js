@@ -8,6 +8,7 @@ var Ownable = artifacts.require("./ownership/Ownable.sol");
 var Pausable = artifacts.require("./lifecycle/Pausable.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var ExtendedQuantstampSale = artifacts.require("./ExtendedQuantstampSale.sol");
 
 var abi = require('ethereumjs-abi');
 
@@ -38,6 +39,7 @@ module.exports = function(deployer, network, accounts) {
     else { // "localhost" or "coverage"
         admin = accounts[1];
         beneficiary = accounts[1];
+        previousContract = accounts[9];
         durationInMinutes = 5;
         startTime = Math.round(new Date().getTime() / 1000);
         capInEther = 20;
@@ -57,14 +59,23 @@ module.exports = function(deployer, network, accounts) {
 
     //used to be accounts[1] for both token and sale
     deployer.deploy(QuantstampToken, admin).then(function() {
-        var abi_constructor_args_for_sale = abi.rawEncode([ "address", "uint", "uint", "uint", "uint", "address" ],
-        [ beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, QuantstampToken.address]).toString('hex');
+        var abi_constructor_args_for_sale = abi.rawEncode([ "address", "uint", "uint", "uint", "uint", ],
+        [ beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes]).toString('hex');
         console.log("------------------------------------------");
         console.log("Use the following line for the QuantstampSale constructor arguments on etherscan:");
         console.log(abi_constructor_args_for_sale);
         console.log("------------------------------------------");
 
-        return deployer.deploy(QuantstampSale, beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes); //, QuantstampToken.address);
+        return deployer.deploy(QuantstampSale, beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes).then(function () {
+            var abi_constructor_args_for_extendedSale = abi.rawEncode([ "address", "uint", "uint", "uint", "uint", "address" ],
+            [ beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, QuantstampSale.address]).toString('hex');
+            console.log("------------------------------------------");
+            console.log("Use the following line for the ExtendedQuantstampSale constructor arguments on etherscan:");
+            console.log(abi_constructor_args_for_extendedSale);
+            console.log("------------------------------------------");
+
+            return deployer.deploy(ExtendedQuantstampSale, beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, QuantstampSale.address);
+        });
     });
 
 
