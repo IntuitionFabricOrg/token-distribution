@@ -4,6 +4,7 @@ pragma solidity ^0.4.15;
 
 import './lifecycle/Pausable.sol';
 import './math/SafeMath.sol';
+import './AbstractQuantstampSale.sol';
 // import './QuantstampToken.sol';
 
 /**
@@ -23,6 +24,7 @@ contract QuantstampSale is Pausable {
     uint public fundingCap;
     uint public minContribution;
     bool public fundingCapReached = false;
+    // initially the sale is closed
     bool public saleClosed = false;
 
     // Whitelist data
@@ -333,6 +335,29 @@ contract QuantstampSale is Pausable {
 
         for (uint i = 0; i < contributors.length; i++) {
             registerUser(contributors[i], caps1[i], caps2[i], caps3[i], caps4[i]);
+        }
+    }
+
+    /**
+     * @dev Migrates contributions from the existing contract.
+     * @param from Address of the existing QuantstampSale contract.
+     * @param contributors Addresses that will be migrated.
+     */
+    function migrateUsers(address from, address[] contributors) external onlyOwner {
+        AbstractQuantstampSale deployedContract = AbstractQuantstampSale(from);
+        for (uint i = 0; i < contributors.length; i++) {
+            address contributor = contributors[i];
+            require(hasPreviouslyRegistered(contributor));
+            contributed1[contributor] = deployedContract.contributed1(contributor);
+            contributed2[contributor] = deployedContract.contributed2(contributor);
+            contributed3[contributor] = deployedContract.contributed3(contributor);
+            contributed4[contributor] = deployedContract.contributed4(contributor);
+            balanceOf[contributor] = deployedContract.balanceOf(contributor);
+            tokenBalanceOf[contributor] = deployedContract.tokenBalanceOf(contributor);
+            require(balanceOf[contributor] == contributed1[contributor].
+                add(contributed2[contributor]).
+                add(contributed3[contributor]).
+                add(contributed4[contributor]));
         }
     }
 
