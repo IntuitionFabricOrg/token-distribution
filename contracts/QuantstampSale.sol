@@ -24,7 +24,6 @@ contract QuantstampSale is Pausable {
     uint public fundingCap;
     uint public minContribution;
     bool public fundingCapReached = false;
-    // initially the sale is closed
     bool public saleClosed = false;
 
     // Whitelist data
