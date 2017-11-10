@@ -125,7 +125,7 @@ contract ExtendedQuantstampSale is Pausable {
     {
         uint amount = msg.value;
         require(amount >= minContribution);
-        
+
         // ensure that the user adheres to whitelist restrictions
         require(registry[msg.sender]);
 
@@ -161,8 +161,8 @@ contract ExtendedQuantstampSale is Pausable {
     function hasPreviouslyRegistered(address contributor)
         internal
         constant
-        onlyOwner returns (bool)
-    {        
+        returns (bool)
+    {
         // if a cap for this customer exist, then the customer has previously been registered
         // we skip the caps from the previous contract
         return cap[contributor] > 0;
@@ -174,12 +174,12 @@ contract ExtendedQuantstampSale is Pausable {
     * NOTE: cannot use SafeMath here, because it exceeds the local variable stack limit.
     * Should be ok since it is onlyOwner, and conditionals should guard the subtractions from underflow.
     */
-    function validateUpdatedRegistration(address addr, uint c)
+    function validateUpdatedRegistration(address addr, uint _cap)
         internal
         constant
-        onlyOwner returns(bool)
+        returns(bool)
     {
-        return (getUserBalance(addr) <= c);
+        return (getUserBalance(addr) <= _cap);
     }
 
     /**
