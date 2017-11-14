@@ -31,6 +31,8 @@ module.exports = function(deployer, network, accounts) {
         admin = "0x3d011185A327DbF81b65cB5502Ab33D02dee95F0";
         beneficiary = "0x26f77bD64d3CE2891906acB27d7ba09feB0C085b";
         durationInMinutes = 1440; // 1 day
+        capActiveInMinutes = 120; // 2 hours
+        tmpCap = 15;
         startTime = Math.round(new Date().getTime() / 1000);
         capInEther = 20;
         minContributionInWei = 1;
@@ -39,8 +41,10 @@ module.exports = function(deployer, network, accounts) {
         admin = accounts[1];
         beneficiary = accounts[1];
         durationInMinutes = 5;
+        capActiveInMinutes = 1;
         startTime = Math.round(new Date().getTime() / 1000);
         capInEther = 20;
+        tmpCap = 15;
         minContributionInWei = 1;
     }
 
@@ -57,14 +61,14 @@ module.exports = function(deployer, network, accounts) {
 
     //used to be accounts[1] for both token and sale
     deployer.deploy(QuantstampToken, admin).then(function() {
-        var abi_constructor_args_for_sale = abi.rawEncode([ "address", "uint", "uint", "uint", "uint", "address" ],
-        [ beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, QuantstampToken.address]).toString('hex');
+        var abi_constructor_args_for_sale = abi.rawEncode([ "address", "uint", "uint", "uint", "uint", "uint", "uint", "address" ],
+        [ beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, tmpCap, capActiveInMinutes, QuantstampToken.address]).toString('hex');
         console.log("------------------------------------------");
         console.log("Use the following line for the QuantstampSale constructor arguments on etherscan:");
         console.log(abi_constructor_args_for_sale);
         console.log("------------------------------------------");
 
-        return deployer.deploy(QuantstampSale, beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, QuantstampToken.address);
+        return deployer.deploy(QuantstampSale, beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, tmpCap, capActiveInMinutes, QuantstampToken.address);
     });
 
 
