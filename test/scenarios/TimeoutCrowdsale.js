@@ -1,4 +1,4 @@
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var QuantstampSale = artifacts.require("./QuantstampMainSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 
 var QuantstampSaleMock = artifacts.require('./helpers/QuantstampSaleMock.sol');
@@ -36,8 +36,7 @@ contract('Missed-deadline Crowdsale', function(accounts) {
     it("should accept 2 ether for the crowdsale", async function() {
         // 0 indicates all crowdsale tokens
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
-        await sale.registerUser(user2, util.hundredEther, util.hundredEther,
-            util.hundredEther, util.hundredEther, {from:owner});
+        await sale.registerUser(user2, {from:owner});
         let allowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
 
         await sale.sendTransaction({from: user2,  value: util.twoEther});
@@ -46,8 +45,8 @@ contract('Missed-deadline Crowdsale', function(accounts) {
         let user2BalanceAfter = (await token.balanceOf(user2)).toNumber();
         let ownerBalanceAfter = (await token.balanceOf(owner)).toNumber();
 
-        assert.equal(allowance - (util.twoEther * 6000), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
-        assert.equal(user2BalanceAfter, util.twoEther * 6000, "The user should have gained amountWei*rate miniQSP");
+        assert.equal(allowance - (util.twoEther * 5000), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
+        assert.equal(user2BalanceAfter, util.twoEther * 5000, "The user should have gained amountWei*rate miniQSP");
         assert.equal(allowanceAfter + user2BalanceAfter, allowance, "The total tokens should remain the same");
     });
 
@@ -56,17 +55,16 @@ contract('Missed-deadline Crowdsale', function(accounts) {
         var time = (new Date().getTime() / 1000);
         var futureTime = time + 130;
 
-        let sale2 = await QuantstampSaleMock.new(accounts[1], 20, 1, time, 2, token.address);
+        let sale2 = await QuantstampSaleMock.new(accounts[1], 20, 1, time, 2, 15, 3, token.address);
         await token.setCrowdsale(sale2.address, 0); // ensures crowdsale has allowance of tokens
-        await sale2.registerUser(user2, util.hundredEther, util.hundredEther,
-            util.hundredEther, util.hundredEther, {from:owner});
+        await sale2.registerUser(user2, {from:owner});
         let nowtest = await sale2._now();
 
         let currentTime = (await sale2.currentTime());
         //let startTime = (await sale2.)
 
         currentTime = currentTime.toNumber();
-        let endTime = await sale2.endTime();
+        let endTime = await sale2.deadline();
 
         await sale2.sendTransaction({from: user2,  value: util.twoEther});
 

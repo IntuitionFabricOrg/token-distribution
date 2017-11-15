@@ -10,7 +10,7 @@ import '../QuantstampMainSale.sol';
  * tokens that are transferred to the contributor via the ERC20-compatible
  * transferFrom() function.
  */
-contract QuantstampSaleMock is QuantstampSale {
+contract QuantstampSaleMock is QuantstampMainSale {
 
     uint public _now;
 
@@ -23,7 +23,7 @@ contract QuantstampSaleMock is QuantstampSale {
         uint initialCap,
         uint capDurationInMinutes,
         address addressOfTokenUsedAsReward
-    ) QuantstampSale(ifSuccessfulSendTo, fundingCapInEthers,
+    ) QuantstampMainSale(ifSuccessfulSendTo, fundingCapInEthers,
                      minimumContributionInWei, start, durationInMinutes,
                      initialCap, capDurationInMinutes, addressOfTokenUsedAsReward){
         _now = start + 1;

@@ -12,7 +12,7 @@ import './QuantstampToken.sol';
  * tokens that are transferred to the contributor via the ERC20-compatible
  * transferFrom() function.
  */
-contract QuantstampSale is Pausable {
+contract QuantstampMainSale is Pausable {
 
     using SafeMath for uint256;
 
@@ -72,7 +72,7 @@ contract QuantstampSale is Pausable {
      * @param capDurationInMinutes          duration of initial individual cap
      * @param addressOfTokenUsedAsReward    address of the token being sold
      */
-    function QuantstampSale(
+    function QuantstampMainSale(
         address ifSuccessfulSendTo,
         uint fundingCapInEthers,
         uint minimumContributionInWei,
@@ -91,11 +91,13 @@ contract QuantstampSale is Pausable {
         startTime = start;
         deadline = start + durationInMinutes * 1 minutes;
         capTime = start + (capDurationInMinutes * 1 minutes);
-        cap = initialCap;
+        cap = initialCap * 1 ether;
         tokenReward = QuantstampToken(addressOfTokenUsedAsReward);
     }
 
+
     function () payable {
+
         buy();
     }
 
@@ -108,6 +110,7 @@ contract QuantstampSale is Pausable {
         saleNotClosed
         nonReentrant
     {
+
         uint amount = msg.value;
         require(amount >= minContribution);
 

@@ -7,7 +7,7 @@ var StandardToken = artifacts.require("./token/StandardToken.sol");
 var Ownable = artifacts.require("./ownership/Ownable.sol");
 var Pausable = artifacts.require("./lifecycle/Pausable.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var QuantstampMainSale = artifacts.require("./QuantstampMainSale.sol");
 
 var abi = require('ethereumjs-abi');
 
@@ -26,6 +26,8 @@ module.exports = function(deployer, network, accounts) {
     var durationInMinutes = "";
     var capInEther = "";
     var minContributionInWei = "";
+    var capActiveInMinutes = "";
+    var tmpCap = "";
 
     if(network == "ropsten") {
         admin = "0x3d011185A327DbF81b65cB5502Ab33D02dee95F0";
@@ -68,7 +70,7 @@ module.exports = function(deployer, network, accounts) {
         console.log(abi_constructor_args_for_sale);
         console.log("------------------------------------------");
 
-        return deployer.deploy(QuantstampSale, beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, tmpCap, capActiveInMinutes, QuantstampToken.address);
+        return deployer.deploy(QuantstampMainSale, beneficiary, capInEther, minContributionInWei, startTime, durationInMinutes, tmpCap, capActiveInMinutes, QuantstampToken.address);
     });
 
 

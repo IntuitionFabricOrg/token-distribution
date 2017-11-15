@@ -1,6 +1,6 @@
 // These tests correspond with JIRA tickets
 
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var QuantstampSale = artifacts.require("./QuantstampMainSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 var util = require("./util.js");
 var bigInt = require("big-integer");
@@ -25,14 +25,15 @@ contract('QSP-15: Capacity Constraint', function(accounts) {
 
   it("crowdsale should stop accepting contributions when cap is reached", async function() {
     await token.setCrowdsale(sale.address, 0);
-    await sale.registerUser(user2, util.hundredEther, util.hundredEther, util.hundredEther,
-            util.hundredEther, {from:owner});
+    await sale.registerUser(user2, {from:owner});
+    await sale.registerUser(user3, {from:owner});
 
     let capacity = (await sale.fundingCap()).toNumber();
-
+    let user_cap = (await sale.cap()).toNumber();
     // this send should work since capacity is not yet reached,
     // but it will be reached after this send completes
-    await sale.sendTransaction({from: user2, value: capacity});
+    await sale.sendTransaction({from: user2, value: user_cap});
+    await sale.sendTransaction({from: user3, value: capacity - user_cap});
     let amountRaised = (await sale.amountRaised());
     let fundingCapReached = await sale.fundingCapReached();
     let crowdsaleClosed = await sale.saleClosed();
@@ -42,7 +43,7 @@ contract('QSP-15: Capacity Constraint', function(accounts) {
     assert.equal(crowdsaleClosed, true);
 
     // Try to send more. This should fail.
-    await util.expectThrow(sale.sendTransaction({from: user2,  value: util.oneEther}));
+    await util.expectThrow(sale.sendTransaction({from: user3,  value: util.oneEther}));
   });
 
 });

@@ -1,4 +1,4 @@
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var QuantstampSale = artifacts.require("./QuantstampMainSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 
 var bigInt = require("big-integer");

@@ -1,4 +1,4 @@
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var QuantstampSale = artifacts.require("./QuantstampMainSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 
 var bigInt = require("big-integer");
@@ -41,7 +41,7 @@ contract('QuantstampSale Constructor', function(accounts) {
     let fundingCapInEthers        = (await sale.fundingCap()).toNumber();
     let minimumContributionInWei  = (await sale.minContribution()).toNumber();
     let start                     = (await sale.startTime()).toNumber();
-    let end                       = (await sale.endTime()).toNumber();
+    let end                       = (await sale.deadline()).toNumber();
 
     assert.equal(ifSuccessfulSendTo, beneficiary, "beneficiary address is incorrect");
     assert.equal(fundingCapInEthers, 20 * (10 ** 18), "funding cap is incorrect");

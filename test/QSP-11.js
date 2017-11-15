@@ -1,6 +1,6 @@
 // These tests correspond with JIRA tickets
 
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var QuantstampSale = artifacts.require("./QuantstampMainSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 var util = require("./util.js");
 
@@ -24,13 +24,14 @@ contract('QSP-11: Owner withdrawal', function(accounts) {
 
     it("owner should be able to withdraw funds once funding goal is reached", async function() {
         await token.setCrowdsale(sale.address, 0);
-        await sale.registerUser(user2, util.oneEther, util.oneEther, util.oneEther, util.oneEther, {from:owner});
+        await sale.registerUser(user2, {from:owner});
 
-        util.logEthBalances(token, sale, accounts);
+        await util.logEthBalances(token, sale, accounts);
         // this send cause the funding goal to be reached
         var amt = util.oneEther;
-        await sale.sendTransaction({value:amt, from:user2});
+        //currentTime() >= startTime
 
+        await sale.sendTransaction({value:amt, from:user2});
         let amountRaised = (await sale.amountRaised()).toNumber();
 
         assert.equal(amountRaised, amt);

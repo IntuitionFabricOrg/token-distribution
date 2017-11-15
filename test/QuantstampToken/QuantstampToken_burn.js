@@ -2,7 +2,7 @@
 
 var bigInt = require("big-integer");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var QuantstampSale = artifacts.require("./QuantstampMainSale.sol");
 var util = require("../util.js");
 
 contract('QuantstampToken.burn', function(accounts) {

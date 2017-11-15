@@ -1,6 +1,6 @@
 
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var QuantstampSale = artifacts.require("./QuantstampMainSale.sol");
 var bigInt = require("big-integer");
 var util = require("./util.js");
 
@@ -56,8 +56,7 @@ contract('QuantstampToken (Basic Tests)', function(accounts) {
     it("should not allow a regular user to transfer before they are enabled", async function() {
         await token.setCrowdsale(sale.address, 0); // ensures crowdsale has allowance of tokens
 
-        await sale.registerUser(user2, util.hundredEther, util.hundredEther,
-            util.hundredEther, util.hundredEther, {from:owner});
+        await sale.registerUser(user2, {from:owner});
         await sale.sendTransaction({from:user2, value:util.twoEther});
         try{
             await token.transfer(user2, 10, {from: user1});
@@ -130,7 +129,7 @@ contract('QuantstampToken (Basic Tests)', function(accounts) {
 
     it("should not allow any crowdsales after transfers have been enabled", async function() {
         var time = new Date().getTime() / 1000;
-        var sale2 = await QuantstampSale.new(accounts[1], 20, 1, time, 2, token.address);
+        var sale2 = await QuantstampSale.new(accounts[1], 20, 1, time, 2, 15, 3, token.address);
         await util.expectThrow(token.setCrowdsale(sale2.address, 0));
     });
 });

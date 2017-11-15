@@ -1,5 +1,5 @@
 
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var QuantstampSale = artifacts.require("./QuantstampMainSale.sol");
 var QuantstampToken = artifacts.require("./QuantstampToken.sol");
 var util = require("./util.js");
 
@@ -43,7 +43,7 @@ contract('QuantstampSale constructor', function(accounts) {
       const rate4 = (await sale.rate4()).toNumber();
       return {rate1, rate2, rate3, rate4};
   }
-
+/*
   it("should sell tokens in the following order tier 3, tier 2, tier 1, tier 4 (skipping tiers)", async function() {
       const tiers = await getTierRates();
       // tier caps for each of the users
@@ -82,15 +82,17 @@ contract('QuantstampSale constructor', function(accounts) {
       await registerUser(user3, 0, 0, 0, 1);
       await util.expectThrow(sendTransaction(2, user3));    
   });
-
+*/
   it("should not allow to contribute less than the min allowed amount of ETH", async function() {
       await token.setCrowdsale(sale.address, 0);
+      await sale.registerUser(user3, {from:owner});
       const minimumContributionInWei = (await sale.minContribution()).toNumber();
       if (minimumContributionInWei > 0) {
           await util.expectThrow(sendTransaction(minimumContributionInWei - 1, user3));
       }
   });
 
+  /*
   it("should allow to register the same user to update the caps if they don't conflict with contributions", async function() {
       const tiers = await getTierRates();
       await token.setCrowdsale(sale.address, 0);
@@ -107,12 +109,13 @@ contract('QuantstampSale constructor', function(accounts) {
       // lower the tier 1 cap below the already accepted tier 1 contribution
       await util.expectThrow(registerUser(user4, 0, 1, 2, 1));
   });
-
+*/
   it("should disallow unregistered users to buy tokens", async function() {
       await token.setCrowdsale(sale.address, 0);
       await util.expectThrow(sendTransaction(1, user5));
   });
 
+  /*
   it("should sell tokens in the following order tier 3, tier 2, tier 1, tier 4 (not skipping tiers)", async function() {
       const tiers = await getTierRates();
       // tier caps for each of the users
@@ -151,27 +154,31 @@ contract('QuantstampSale constructor', function(accounts) {
       await registerUser(user5, 5, 5, 5, 5);
       await util.expectThrow(sendTransaction(2, user5));
   });
+  */
 
+  /*
   it("should reach the cap", async function() {
       await token.setCrowdsale(sale.address, 0);
       await sendTransaction(1, user5);
       assert.equal(await sale.fundingCapReached(), true);
   });
-
+    */
    it("should reject transactions with 0 value", async function() {
       await token.setCrowdsale(sale.address, 0);
       await util.expectThrow(sendTransaction(0, user5));
   });
 
+   /*
   it("should reject caps below the min contribution", async function() {
       await token.setCrowdsale(sale.address, 0);
       const minimumContributionInWei = (await sale.minContribution()).toNumber();
       await util.expectThrow(sale.registerUser(user3, minimumContributionInWei - 1, 0, 0, 0, {from : owner}));
   });
+  */
 
   it("should reject the address 0", async function() {
       await token.setCrowdsale(sale.address, 0);
-      await util.expectThrow(registerUser(0, 1, 1, 1, 1));
+      await util.expectThrow(sale.registerUser(0, {from:owner}));
   });
 
   it("should deactivate only registered addresses", async function() {
@@ -181,18 +188,22 @@ contract('QuantstampSale constructor', function(accounts) {
 
   it("should keep the balance constant before and after reactivation", async function() {
       await token.setCrowdsale(sale.address, 0);
+      await sale.registerUser(user2);
+        await sale.sendTransaction({value: util.twoEther, from:user2});
+
       const balance = await balanceOf(user2);
       await sale.deactivate(user2);
-      await sale.reactivate(user2);
+      await sale.registerUser(user2);
       const balanceAfterReactivation = await balanceOf(user2);
       assert.equal(balance, balanceAfterReactivation);
   });
 
+  /*
   it("should reactivate only registered addresses", async function() {
       await token.setCrowdsale(sale.address, 0);
       await util.expectThrow(sale.reactivate(accounts[6]));
   });
-
+    */
 /*
   it("should be an allowance so that the crowdsale can transfer the tokens", async function() {
       let crowdSaleBalance = (await token.crowdSaleSupply()).toNumber();
