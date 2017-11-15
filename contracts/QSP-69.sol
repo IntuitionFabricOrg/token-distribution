@@ -1,16 +1,128 @@
-// Quantstamp Technologies Inc. (info@quantstamp.com)
+pragma solidity ^0.4.11;
 
-pragma solidity ^0.4.15;
+/**
+ * @title SafeMath
+ * @dev Math operations with safety checks that throw on error
+ */
+library SafeMath {
+  function mul(uint256 a, uint256 b) internal constant returns (uint256) {
+    uint256 c = a * b;
+    assert(a == 0 || c / a == b);
+    return c;
+  }
 
-import './lifecycle/Pausable.sol';
-import './math/SafeMath.sol';
-// import './QuantstampToken.sol';
+  function div(uint256 a, uint256 b) internal constant returns (uint256) {
+    // assert(b > 0); // Solidity automatically throws when dividing by 0
+    uint256 c = a / b;
+    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+    return c;
+  }
+
+  function sub(uint256 a, uint256 b) internal constant returns (uint256) {
+    assert(b <= a);
+    return a - b;
+  }
+
+  function add(uint256 a, uint256 b) internal constant returns (uint256) {
+    uint256 c = a + b;
+    assert(c >= a);
+    return c;
+  }
+}
+
+/**
+ * @title Ownable
+ * @dev The Ownable contract has an owner address, and provides basic authorization control
+ * functions, this simplifies the implementation of "user permissions".
+ */
+contract Ownable {
+  address public owner;
+
+
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+
+  /**
+   * @dev The Ownable constructor sets the original `owner` of the contract to the sender
+   * account.
+   */
+  function Ownable() {
+    owner = msg.sender;
+  }
+
+
+  /**
+   * @dev Throws if called by any account other than the owner.
+   */
+  modifier onlyOwner() {
+    require(msg.sender == owner);
+    _;
+  }
+
+
+  /**
+   * @dev Allows the current owner to transfer control of the contract to a newOwner.
+   * @param newOwner The address to transfer ownership to.
+   */
+  function transferOwnership(address newOwner) onlyOwner public {
+    require(newOwner != address(0));
+    OwnershipTransferred(owner, newOwner);
+    owner = newOwner;
+  }
+
+}
+
+/**
+ * @title Pausable
+ * @dev Base contract which allows children to implement an emergency stop mechanism.
+ */
+contract Pausable is Ownable {
+  event Pause();
+  event Unpause();
+
+  bool public paused = false;
+
+
+  /**
+   * @dev Modifier to make a function callable only when the contract is not paused.
+   */
+  modifier whenNotPaused() {
+    require(!paused);
+    _;
+  }
+
+  /**
+   * @dev Modifier to make a function callable only when the contract is paused.
+   */
+  modifier whenPaused() {
+    require(paused);
+    _;
+  }
+
+  /**
+   * @dev called by the owner to pause, triggers stopped state
+   */
+  function pause() onlyOwner whenNotPaused public {
+    paused = true;
+    Pause();
+  }
+
+  /**
+   * @dev called by the owner to unpause, returns to normal state
+   */
+  function unpause() onlyOwner whenPaused public {
+    paused = false;
+    Unpause();
+  }
+}
+
 
 /**
  * The QuantstampSale smart contract is used for selling QuantstampToken
  * tokens (QSP). It does so by converting ETH received into a quantity of
- * tokens that are transferred to the contributor via the ERC20-compatible
- * transferFrom() function.
+ * tokens. This contract does book-keeping. The actual tokens are held
+ * until which time Quantstamp explicitly performs the transfer to
+ * contributors. The reason for holding is for KYC auditing to complete.
  */
 contract QuantstampSale is Pausable {
 
@@ -19,7 +131,7 @@ contract QuantstampSale is Pausable {
     // The beneficiary is the future recipient of the funds
     address public beneficiary;
 
-    // The crowdsale has a funding goal, cap, deadline, and minimum contribution
+    // The crowdsale has a funding cap, deadline and minimum contribution
     uint public fundingCap;
     uint public minContribution;
     bool public fundingCapReached = false;
@@ -116,20 +228,19 @@ contract QuantstampSale is Pausable {
         // tokenReward = QuantstampToken(addressOfTokenUsedAsReward);
     }
 
-    /**
-     * This function is called whenever Ether is sent to the
-     * smart contract. It can only be executed when the crowdsale is
-     * not paused, not closed, and before the deadline has been reached.
-     *
-     * This function will update state variables for whether or not the
-     * funding goal or cap have been reached. It also ensures that the
-     * tokens are transferred to the sender, and that the correct
-     * number of tokens are sent according to the current rate.
-     */
     function () payable {
         buy();
     }
 
+    /**
+     * This function is called whenever Ether is sent to the
+     * smart contract. It can only be executed when the crowdsale is
+     * not paused, not closed and before the deadline has been reached.
+     *
+     * This function will update state variables for whether or not the
+     * funding cap have been reached. It also ensures that the
+     * tokens balances are recorded based on the correct rate.
+     */
     function buy ()
         payable public
         whenNotPaused
@@ -397,9 +508,7 @@ contract QuantstampSale is Pausable {
 
     /**
      * The owner can call this function to withdraw the funds that
-     * have been sent to this contract for the crowdsale subject to
-     * the funding goal having been reached. The funds will be sent
-     * to the beneficiary specified when the crowdsale was created.
+     * have been sent to this contract for the pre-sale.
      */
     function ownerSafeWithdrawal() external onlyOwner nonReentrant {
         uint balanceToSend = this.balance;
