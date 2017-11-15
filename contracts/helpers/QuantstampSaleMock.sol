@@ -2,7 +2,7 @@
 
 pragma solidity ^0.4.15;
 
-import '../QuantstampSale.sol';
+import '../QuantstampMainSale.sol';
 
 /**
  * The QuantstampSale smart contract is used for selling QuantstampToken
@@ -20,12 +20,12 @@ contract QuantstampSaleMock is QuantstampSale {
         uint minimumContributionInWei,
         uint start,
         uint durationInMinutes,
-        uint tmpCap,
-        uint capActiveInMinutes,
+        uint initialCap,
+        uint capDurationInMinutes,
         address addressOfTokenUsedAsReward
     ) QuantstampSale(ifSuccessfulSendTo, fundingCapInEthers,
                      minimumContributionInWei, start, durationInMinutes,
-                     tmpCap, capActiveInMinutes, addressOfTokenUsedAsReward){ 
+                     initialCap, capDurationInMinutes, addressOfTokenUsedAsReward){
         _now = start + 1;
     }
 

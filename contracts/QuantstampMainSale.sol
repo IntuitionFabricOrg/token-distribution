@@ -16,60 +16,41 @@ contract QuantstampSale is Pausable {
 
     using SafeMath for uint256;
 
-    // The beneficiary is the future recipient of the funds
-    address public beneficiary;
+    uint public constant RATE = 5000;       // constant for converting ETH to QSP
+    uint public constant GAS_LIMIT_IN_WEI = 50000000000 wei;
 
-    // The crowdsale has a funding goal, cap, deadline, and minimum contribution
-    // uint public fundingGoal;
-    uint public fundingCap;
-    uint public minContribution;
-    bool public fundingCapReached = false;
-    bool public saleClosed = false;
+    bool public fundingCapReached = false;  // funding cap has been reached
+    bool public refundEnabled = false;      // customer refunds are enabled or not
+    bool public saleClosed = false;         // crowdsale is closed or not
+    bool private rentrancy_lock = false;    // prevent certain functions from recursize calls
 
-    // Indicates whether fund is locked (i.e, customers cannot withdraw)
-    bool public refundEnabled = false;
+    uint public fundingCap;                 // upper bound on amount that can be raised (in wei)
+    uint256 public cap;                     // individual cap during initial period of sale
 
-    // Time period of sale (UNIX timestamps)
-    uint public startTime;
-    uint public deadline;
+    uint public minContribution;            // lower bound on amount a contributor can send (in wei)
+    uint public amountRaised;               // amount raised so far (in wei)
+    uint public refundAmount;               // amount that has been refunded so far
 
-    // Keeps track of the amount of wei raised
-    uint public amountRaised;
+    uint public startTime;                  // UNIX timestamp for start of sale
+    uint public deadline;                   // UNIX timestamp for end (deadline) of sale
+    uint public capTime;                    // Initial time period when the cap restriction is on
 
-    // Refund amount, should it be required
-    uint public refundAmount;
+    address public beneficiary;             // The beneficiary is the future recipient of the funds
 
-    // The ratio of QSP to Ether
-    uint public constant RATE = 5000;
+    QuantstampToken public tokenReward;     // The token being sold
 
-    // prevent certain functions from being recursively called
-    bool private rentrancy_lock = false;
-
-    // The token being sold
-    QuantstampToken public tokenReward;
-
-    // A map that tracks the amount of wei contributed by address
-    mapping(address => uint256) public balanceOf;
-
-    // Registry of wallet addresses from whitelist
-    mapping(address => bool) public registry;
-
-    // Time period when the cap restriction is on
-    uint public capTime;
-
-    // Specifies an optional cap (in wei) on individual contributions.
-    uint256 public cap;
+    mapping(address => uint256) public balanceOf;   // tracks the amount of wei contributed by address
+    mapping(address => bool) public registry;       // Registry of wallet addresses from whitelist
 
     // Events
-    event GoalReached(address _beneficiary, uint _amountRaised);
     event CapReached(address _beneficiary, uint _amountRaised);
     event FundTransfer(address _backer, uint _amount, bool _isContribution);
+    event RegistrationStatusChanged(address target, bool isRegistered);
 
     // Modifiers
     modifier beforeDeadline()   { require (currentTime() < deadline); _; }
     modifier afterDeadline()    { require (currentTime() >= deadline); _; }
-    modifier afterStartTime()    { require (currentTime() >= startTime); _; }
-
+    modifier afterStartTime()   { require (currentTime() >= startTime); _; }
     modifier saleNotClosed()    { require (!saleClosed); _; }
 
     modifier nonReentrant() {
@@ -83,12 +64,12 @@ contract QuantstampSale is Pausable {
      * Constructor for a crowdsale of QuantstampToken tokens.
      *
      * @param ifSuccessfulSendTo            the beneficiary of the fund
-     * @param fundingGoalInEthers           the minimum goal to be reached
      * @param fundingCapInEthers            the cap (maximum) size of the fund
      * @param minimumContributionInWei      minimum contribution (in wei)
      * @param start                         the start time (UNIX timestamp)
      * @param durationInMinutes             the duration of the crowdsale in minutes
-     * @param rateQspToEther                the conversion rate from QSP to Ether
+     * @param initialCap                    initial individual cap
+     * @param capDurationInMinutes          duration of initial individual cap
      * @param addressOfTokenUsedAsReward    address of the token being sold
      */
     function QuantstampSale(
@@ -99,12 +80,10 @@ contract QuantstampSale is Pausable {
         uint durationInMinutes,
         uint initialCap,
         uint capDurationInMinutes,
-        uint rateQspToEther,
         address addressOfTokenUsedAsReward
     ) {
         require(ifSuccessfulSendTo != address(0) && ifSuccessfulSendTo != address(this));
         require(addressOfTokenUsedAsReward != address(0) && addressOfTokenUsedAsReward != address(this));
-        require(fundingGoalInEthers <= fundingCapInEthers);
         require(durationInMinutes > 0);
         beneficiary = ifSuccessfulSendTo;
         fundingCap = fundingCapInEthers * 1 ether;
