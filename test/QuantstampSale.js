@@ -103,10 +103,10 @@ contract('QuantstampSale constructor', function(accounts) {
 
   it("should disallow sending too much gas during the initial cap period", async function() {
       await token.setCrowdsale(sale.address, 0);
-      await registerUser(user3);
+      await registerUser(user5);
       if ((await sale.currentTime()) <= (await sale.capTime())) {
         const tooMuchGas = 1 + (await sale.GAS_LIMIT_IN_WEI());
-        await util.expectThrow(sale.sendTransaction({value : util.oneEther, from : user3, gasPrice: tooMuchGas}));
+        await util.expectThrow(sale.sendTransaction({value : util.oneEther, from : user5, gasPrice: tooMuchGas}));
       }
   });
 
