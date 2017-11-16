@@ -89,7 +89,7 @@ contract QuantstampMainSale is Pausable {
         fundingCap = fundingCapInEthers * 1 ether;
         minContribution = minimumContributionInWei;
         startTime = start;
-        deadline = start + durationInMinutes * 1 minutes;
+        deadline = start + (durationInMinutes * 1 minutes);
         capTime = start + (capDurationInMinutes * 1 minutes);
         cap = initialCap * 1 ether;
         tokenReward = QuantstampToken(addressOfTokenUsedAsReward);
@@ -97,7 +97,6 @@ contract QuantstampMainSale is Pausable {
 
 
     function () payable {
-
         buy();
     }
 
@@ -110,12 +109,14 @@ contract QuantstampMainSale is Pausable {
         saleNotClosed
         nonReentrant
     {
-
         uint amount = msg.value;
         require(amount >= minContribution);
 
         // ensure that the user adheres to whitelist restrictions
         require(registry[msg.sender]);
+
+        amountRaised = amountRaised.add(amount);
+        require(amountRaised <= fundingCap);
 
         // Update the sender's balance of wei contributed and the total amount raised
         balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
@@ -124,9 +125,6 @@ contract QuantstampMainSale is Pausable {
             require(tx.gasprice <= GAS_LIMIT_IN_WEI);
             require(balanceOf[msg.sender] <= cap);
         }
-
-        amountRaised = amountRaised.add(amount);
-        require(amountRaised <= fundingCap);
 
         // Transfer the tokens from the crowdsale supply to the sender
         if (!tokenReward.transferFrom(tokenReward.owner(), msg.sender, amount.mul(RATE))) {
