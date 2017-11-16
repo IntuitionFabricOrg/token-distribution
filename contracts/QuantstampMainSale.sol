@@ -20,7 +20,6 @@ contract QuantstampMainSale is Pausable {
     uint public constant GAS_LIMIT_IN_WEI = 50000000000 wei;
 
     bool public fundingCapReached = false;  // funding cap has been reached
-    bool public refundEnabled = false;      // customer refunds are enabled or not
     bool public saleClosed = false;         // crowdsale is closed or not
     bool private rentrancy_lock = false;    // prevent certain functions from recursize calls
 
@@ -226,34 +225,6 @@ contract QuantstampMainSale is Pausable {
         uint balanceToSend = this.balance;
         beneficiary.transfer(balanceToSend);
         FundTransfer(beneficiary, balanceToSend, false);
-    }
-
-    /**
-     * The owner can unlock the fund with this function. The use-
-     * case for this is when the owner decides after the deadline
-     * to allow contributors to be refunded their contributions.
-     * Note that the fund would be automatically unlocked if the
-     * minimum funding goal were not reached.
-     */
-    function enableRefunds() external afterDeadline onlyOwner {
-        refundEnabled = true;
-    }
-
-    /**
-     * This function permits anybody to withdraw the funds they have
-     * contributed if and only if the deadline has passed and the
-     * funding goal was not reached.
-     */
-    function safeWithdrawal() external afterDeadline nonReentrant {
-        if (refundEnabled) {
-            uint amount = balanceOf[msg.sender];
-            balanceOf[msg.sender] = 0;
-            if (amount > 0) {
-                refundAmount = refundAmount.add(amount);
-                msg.sender.transfer(amount);
-                FundTransfer(msg.sender, amount, false);
-            }
-        }
     }
 
     /**
