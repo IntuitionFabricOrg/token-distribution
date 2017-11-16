@@ -42,6 +42,9 @@ contract('SafeWithdrawal', function(accounts) {
         await sale.safeWithdrawal({from:user2});
         let balFinal = await sale.balanceOf(user2);
 
+        await sale.safeWithdrawal({from:user2});
+
+
         assert.equal(bal.toNumber(), util.oneEther, "the before balance should be one ether");
         assert.equal(balAfter.toNumber(), util.oneEther, "the balance after deadline but before refunds should be one ether");
         assert.equal(balFinal.toNumber(), 0, "the final balance should be zero");
