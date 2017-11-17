@@ -34,6 +34,14 @@ contract('QuantstampSale constructor', function(accounts) {
       return (await token.balanceOf(user)).toNumber();
   }
 
+  it("should not allow to contribute more than allowed by the cap", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await registerUser(user3);
+      if ((await sale.currentTime()) <= (await sale.capTime())) {
+        await util.expectThrow(sendTransaction(16, user3));
+      }
+  });
+
   it("should sell tokens at a prespecified rate", async function() {
       await token.setCrowdsale(sale.address, 0);
       await registerUser(user2);
@@ -52,13 +60,7 @@ contract('QuantstampSale constructor', function(accounts) {
       assert.equal((await sale.amountRaised()).toNumber(), util.toEther(sum));
   });
 
-  it("should not allow to contribute more than allowed by the cap", async function() {
-      await token.setCrowdsale(sale.address, 0);
-      await registerUser(user3);
-      if ((await sale.currentTime()) <= (await sale.capTime())) {
-        await util.expectThrow(sendTransaction(16, user3));
-      }
-  });
+
 
   it("should not allow to contribute less than the min allowed amount of ETH", async function() {
       await token.setCrowdsale(sale.address, 0);

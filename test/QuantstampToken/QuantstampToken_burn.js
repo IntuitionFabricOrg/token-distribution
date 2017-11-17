@@ -27,6 +27,7 @@ contract('QuantstampToken.burn', function(accounts) {
 
     it("owner should be able to burn tokens when transfers are not enabled", async function() {
         let oldOwnerBalance = await token.balanceOf(owner);
+        console.log("old balance: " + oldOwnerBalance);
         let oldTotalSupply = await token.totalSupply();
         await token.burn(1, {from: owner});
         let newTotalSupply = await token.totalSupply();

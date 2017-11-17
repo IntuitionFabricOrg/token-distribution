@@ -38,7 +38,9 @@ contract QuantstampMainSale is Pausable {
 
     QuantstampToken public tokenReward;     // The token being sold
 
-    mapping(address => uint256) public balanceOf;   // tracks the amount of wei contributed by address
+    mapping(address => uint256) public balanceOf;   // tracks the amount of wei contributed by address during all sales
+    mapping(address => uint256) public mainsaleBalanceOf; // tracks the amount of wei contributed by address during mainsale
+
     mapping(address => bool) public registry;       // Registry of wallet addresses from whitelist
 
     // Events
@@ -115,14 +117,29 @@ contract QuantstampMainSale is Pausable {
         require(registry[msg.sender]);
 
         amountRaised = amountRaised.add(amount);
-        require(amountRaised <= fundingCap);
+
+        //require(amountRaised <= fundingCap);
+        // if we overflow the fundingCap, transfer the overflow amount
+        if(amountRaised > fundingCap){
+            uint overflow = amountRaised.sub(fundingCap);
+            amount = amount.sub(overflow);
+            amountRaised = fundingCap;
+            // transfer overflow back to the user
+            msg.sender.transfer(overflow);
+        }
+
 
         // Update the sender's balance of wei contributed and the total amount raised
         balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
 
+        // Update the sender's cap balance
+        mainsaleBalanceOf[msg.sender] = mainsaleBalanceOf[msg.sender].add(amount);
+
+
         if (currentTime() <= capTime) {
             require(tx.gasprice <= GAS_LIMIT_IN_WEI);
-            require(balanceOf[msg.sender] <= cap);
+            require(mainsaleBalanceOf[msg.sender] <= cap);
+
         }
 
         // Transfer the tokens from the crowdsale supply to the sender

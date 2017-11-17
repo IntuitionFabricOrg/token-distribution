@@ -152,6 +152,7 @@ contract QuantstampToken is StandardToken, BurnableToken, Ownable {
      */
     function burn(uint256 _value) public {
         require(transferEnabled || msg.sender == owner);
+        require(balances[msg.sender] >= _value);
         super.burn(_value);
         Transfer(msg.sender, address(0x0), _value);
     }
