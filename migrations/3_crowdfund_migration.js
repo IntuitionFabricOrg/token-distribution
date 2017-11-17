@@ -47,7 +47,7 @@ module.exports = function(deployer, network, accounts) {
         tmpCap = 50;
         startTime = Math.round(new Date().getTime() / 1000);
         capInEther = 100000;
-        minContributionInWei = 100000000000000000;
+        minContributionInWei = 10000000000000000;
     }
     else { // "localhost" or "coverage"
         admin = accounts[1];

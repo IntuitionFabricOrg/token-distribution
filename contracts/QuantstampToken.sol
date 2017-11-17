@@ -19,8 +19,8 @@ import './math/SafeMath.sol';
 contract QuantstampToken is StandardToken, BurnableToken, Ownable {
 
     // Constants
-    string  public constant name = "Quantstamp Token";
-    string  public constant symbol = "QSP";
+    string  public constant name = "PSQ Token";
+    string  public constant symbol = "PSQ";
     uint8   public constant decimals = 18;
     uint256 public constant INITIAL_SUPPLY      = 1000000000 * (10 ** uint256(decimals));
     uint256 public constant CROWDSALE_ALLOWANCE =  650000000 * (10 ** uint256(decimals));
