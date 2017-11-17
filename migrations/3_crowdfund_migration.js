@@ -39,6 +39,16 @@ module.exports = function(deployer, network, accounts) {
         capInEther = 20;
         minContributionInWei = 1;
     }
+    else if(network == "live"){
+        admin = "0x92af6067F7Fe2ae488439c2b79EF7f8fC57E5Ad3";
+        beneficiary = "0x22e9c5643D6db3aA4163Ae80Fca9241315214a37";
+        durationInMinutes = 43200;
+        capActiveInMinutes = 480;  //120; // 2 hours
+        tmpCap = 50;
+        startTime = Math.round(new Date().getTime() / 1000);
+        capInEther = 100000;
+        minContributionInWei = 100000000000000000;
+    }
     else { // "localhost" or "coverage"
         admin = accounts[1];
         beneficiary = accounts[1];
