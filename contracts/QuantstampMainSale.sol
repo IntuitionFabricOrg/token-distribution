@@ -101,6 +101,7 @@ contract QuantstampMainSale is Pausable {
         buy();
     }
 
+
     function buy()
         payable
         public
@@ -217,7 +218,7 @@ contract QuantstampMainSale is Pausable {
      * @param amountWei     the amount contributed in wei
      * @param amountMiniQsp the amount of tokens transferred in mini-QSP
      */
-    function allocateTokens(address _to, uint amountWei, uint amountMiniQsp) external
+    function allocateTokens(address _to, uint amountWei, uint amountMiniQsp) public
             onlyOwner nonReentrant
     {
         amountRaised = amountRaised.add(amountWei);
@@ -232,6 +233,29 @@ contract QuantstampMainSale is Pausable {
         FundTransfer(_to, amountWei, true);
         updateFundingCap();
     }
+
+    /**
+     * The owner can allocate the specified amount of tokens from the
+     * crowdsale allowance to the recipients.
+     *
+     * NOTE: be extremely careful to get the amounts correct, which
+     * are in units of wei and mini-QSP. Every digit counts.
+     *
+     * @param contributors            the recipients of the tokens
+     * @param amountsWei     the amounts contributed in wei
+     * @param amountsMiniQsp the amounts of tokens transferred in mini-QSP
+     */
+    function allocateTokensForList(address[] contributors, uint[] amountsWei, uint[] amountsMiniQsp)
+        external
+        onlyOwner
+    {
+        require(contributors.length == amountsWei.length);
+        require(contributors.length == amountsMiniQsp.length);
+        for (uint i = 0; i < contributors.length; i++) {
+            allocateTokens(contributors[i], amountsWei[i], amountsMiniQsp[i]);
+        }
+    }
+
 
     /**
      * The owner can call this function to withdraw the funds that

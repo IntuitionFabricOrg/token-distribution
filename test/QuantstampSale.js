@@ -119,6 +119,30 @@ contract('QuantstampSale constructor', function(accounts) {
       }
   });
 
+  it("should allow sending gas that fall within range during cap period", async function() {
+      await token.setCrowdsale(sale.address, 0);
+      await registerUser(accounts[8]);
+      if ((await sale.currentTime()) <= (await sale.capTime())) {
+        const adequetGas = (await sale.GAS_LIMIT_IN_WEI()).toNumber(); //50000000000
+        console.log('typeof adequetGas:',typeof adequetGas);
+        //let r = await sale.test({gas:30000000000, value:50000, from:accounts[8]});
+        let isCorrect = false;
+        try {
+          await sale.sendTransaction({value : util.twoEther, from : accounts[8], gasprice: 30000000000});
+
+          /* All these variations throw an error which gets caught */
+          // await sale.sendTransaction({value : util.twoEther, from : accounts[8], gas: 20000000});
+          // await sale.sendTransaction({value : util.twoEther, from : accounts[8], gas: adequetGas});
+          // await sale.sendTransaction({value : util.twoEther, from : accounts[8], gas: 5000000});
+        }
+        catch (error) {
+          console.log('error:',error);
+          isCorrect = error.message.search('Exceeds block gas limit') >= 0;
+        }
+        assert.equal(isCorrect, false);
+      }
+  });
+
   it("should reach the cap", async function() {
       await token.setCrowdsale(sale.address, 0);
       await sale.registerUser(user5, {from:owner});
