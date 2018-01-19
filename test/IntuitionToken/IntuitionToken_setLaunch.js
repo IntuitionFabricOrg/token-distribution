@@ -24,7 +24,7 @@ contract('IntuitionToken.setLaunch', function(accounts) {
 
     it("should not be callable by non-owner", async function() {
         try {
-            await token.setTokenLaunch((sale.address, {from: user2});
+            await token.setTokenLaunch(sale.address, {from: user2});
         }
         catch (e) {
             return true;
@@ -33,7 +33,7 @@ contract('IntuitionToken.setLaunch', function(accounts) {
     });
 
     it("should set the address of the crowdsale", async function() {
-        await token.setTokenLaunch((sale.address, 0);
+        await token.setTokenLaunch(sale.address, 0);
         let crowdSaleAddr = await token.crowdSaleAddr();
         assert.equal(crowdSaleAddr, sale.address);
     });
@@ -41,7 +41,7 @@ contract('IntuitionToken.setLaunch', function(accounts) {
     it("should not permit an allowance larger than what the token owner is supposed to allow", async function() {
         let crowdSaleAllowance = bigInt((await token.crowdSaleAllowance()));
         try {
-            await token.setTokenLaunch((sale.address, crowdSaleAllowance + 1);
+            await token.setTokenLaunch(sale.address, crowdSaleAllowance + 1);
         }
         catch (e) {
             return true;
@@ -53,7 +53,7 @@ contract('IntuitionToken.setLaunch', function(accounts) {
     // Note: I couldn't get it to perform comparisons of bigInt numbers, so used a small int
     it("should provide the correct allowance of QSP for the crowdsale", async function() {
         let expectedCrowdSaleAllowance = 1;
-        await token.setTokenLaunch((sale.address, expectedCrowdSaleAllowance);
+        await token.setTokenLaunch(sale.address, expectedCrowdSaleAllowance);
 
         let crowdSaleAllowance = await token.allowance(accounts[0], sale.address);
 
@@ -63,12 +63,12 @@ contract('IntuitionToken.setLaunch', function(accounts) {
     it("should clear allowance of old crowdsale and correctly set that of new crowdsale", async function() {
         let expectedCrowdSaleAllowance = 1;
 
-        await token.setTokenLaunch((sale.address, expectedCrowdSaleAllowance);
+        await token.setTokenLaunch(sale.address, expectedCrowdSaleAllowance);
         let crowdSaleAllowance = await token.allowance(accounts[0], sale.address);
         assert.equal(crowdSaleAllowance, expectedCrowdSaleAllowance);
 
         // change to a different launch address (user1 isn't actually a crowdsale, but it doesn't matter)
-        await token.setTokenLaunch((user1, expectedCrowdSaleAllowance);
+        await token.setTokenLaunch(user1, expectedCrowdSaleAllowance);
 
         let oldCrowdSaleAllowance = await token.allowance(accounts[0], sale.address);
         assert.equal(oldCrowdSaleAllowance, 0);
@@ -86,7 +86,7 @@ contract('IntuitionToken.setLaunch', function(accounts) {
         assert.equal(transferEnabled, true);
 
         try {
-            await token.setTokenLaunch((sale.address)
+            await token.setTokenLaunch(sale.address)
         }
         catch(e) {
             return true;

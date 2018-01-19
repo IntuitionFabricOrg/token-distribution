@@ -33,7 +33,7 @@ contract('IntuitionToken.enableTransfer', function(accounts) {
     });
 
     it("should enable transfers and clear allowances", async function() {
-        await token.setTokenLaunch((sale.address, 0);
+        await token.setTokenLaunch(sale.address, 0);
         await token.enableTransfer();
         let transferEnabled = await token.transferEnabled();
         assert.equal(transferEnabled, true);

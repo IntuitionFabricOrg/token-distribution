@@ -65,7 +65,7 @@ contract('Multiple Launches', function(accounts) {
 
   it("should accept 2 ether for the crowdsale", async function() {
       // 0 indicates all crowdsale tokens
-      await token.setTokenLaunch((sale.address, 0); // ensures crowdsale has allowance of tokens
+      await token.setTokenLaunch(sale.address, 0); // ensures crowdsale has allowance of tokens
 
       var amountEther = 2;
       var amountWei = web3.toWei(amountEther, "ether");
@@ -116,7 +116,7 @@ contract('Multiple Launches', function(accounts) {
   it("the owner of IntuitionToken should now issue allowance to a new crowdsale", async function() {
       let time = new Date().getTime() / 1000;
       sale2 = await IntuitionLaunch.new(accounts[1], 10, 20, 1, time, 2, 5000, token.address);
-      await token.setTokenLaunch((sale2.address, 0); // ensures crowdsale has allowance of tokens
+      await token.setTokenLaunch(sale2.address, 0); // ensures crowdsale has allowance of tokens
 
       let saleAllowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
       let sale2Allowance = (await token.allowance(tokenOwner, sale2.address)).toNumber();
