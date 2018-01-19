@@ -8,7 +8,7 @@ import './ownership/Ownable.sol';
 import './math/SafeMath.sol';
 
 /**
- * The Intuition token (AIT) has a fixed supply and restricts the ability
+ * The Intuition token (AIG) has a fixed supply and restricts the ability
  * to transfer tokens until the owner has called the enableTransfer()
  * function.
  *
@@ -19,9 +19,9 @@ import './math/SafeMath.sol';
 contract IntuitionToken is StandardToken, BurnableToken, Ownable {
 
     // Constants
-    string  public constant name = "Artificial Intuition Token";
-    string  public constant symbol = "AIT";
-    uint8   public constant decimals = 18;
+    string  public constant name = "Intuition";
+    string  public constant symbol = "AIG"; // Artificial Intuition Genisys 
+    uint8   public constant decimals = 18;  // when there's 1 token per person you want these decimal places
     uint256 public constant INITIAL_SUPPLY      = 10000000000 * (10 ** uint256(decimals));
     uint256 public constant CROWDSALE_ALLOWANCE =  4500000000 * (10 ** uint256(decimals));
     uint256 public constant ADMIN_ALLOWANCE     =  3500000000 * (10 ** uint256(decimals));
@@ -30,7 +30,7 @@ contract IntuitionToken is StandardToken, BurnableToken, Ownable {
     uint256 public crowdSaleAllowance;      // the number of tokens available for crowdsales
     uint256 public adminAllowance;          // the number of tokens available for the administrator
     address public crowdSaleAddr;           // the address of a crowdsale currently selling this token
-    address public adminAddr;               // the address of a crowdsale currently selling this token
+    address public adminAddr;               // the address of a admin currently selling this token
     bool    public transferEnabled = false; // indicates if transferring tokens is enabled or not
 
     // Modifiers
