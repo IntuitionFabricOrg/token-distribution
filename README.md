@@ -35,8 +35,8 @@ The token contract includes the following constants:
     name             = "Intuition";
     symbol           = "AIG";  // artificial intuition genesis
     decimals         = 18;
-    INITIAL_SUPPLY   = 10 billion AIT
-    CROWDlaunch_SUPPLY = 4500 million AIT
+    INITIAL_SUPPLY   = 10 billion AIG
+    CROWDlaunch_SUPPLY = 4500 million AIG
 ```
 
 The above constants indicate a total supply of 10 billion pre-minted tokens. The logic behind this is that there should be one token per person by the year 2045. Of those, 4.5 billion tokens are set aside as an allowance for token launch purposes.
