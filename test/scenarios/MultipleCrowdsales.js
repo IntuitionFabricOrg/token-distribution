@@ -78,8 +78,8 @@ contract('Multiple Launches', function(accounts) {
       let user2BalanceAfter = (await token.balanceOf(user2)).toNumber();
       let ownerBalanceAfter = (await token.balanceOf(owner)).toNumber();
 
-      assert.equal(allowance - (amountWei * rate), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
-      assert.equal(user2BalanceAfter, amountWei * rate, "The user should have gained amountWei*rate miniQSP");
+      assert.equal(allowance - (amountWei * rate), allowanceAfter, "The crowdsale should have sent amountWei*rate miniAIG");
+      assert.equal(user2BalanceAfter, amountWei * rate, "The user should have gained amountWei*rate miniAIG");
       assert.equal(allowanceAfter + user2BalanceAfter, allowance, "The total tokens should remain the same");
   });
 
@@ -95,8 +95,8 @@ contract('Multiple Launches', function(accounts) {
       let user2BalanceAfter = (await token.balanceOf(user2)).toNumber();
       let ownerBalanceAfter = (await token.balanceOf(tokenOwner)).toNumber();
 
-      assert.equal(allowance - (amountWei * rate), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
-      assert.equal(user2BalanceAfter, web3.toWei(12, "ether") * rate, "The user should have gained amountWei*rate miniQSP");
+      assert.equal(allowance - (amountWei * rate), allowanceAfter, "The crowdsale should have sent amountWei*rate miniAIG");
+      assert.equal(user2BalanceAfter, web3.toWei(12, "ether") * rate, "The user should have gained amountWei*rate miniAIG");
       assert.equal(allowanceAfter + user2BalanceAfter, crowdsaleSupply, "The total tokens should remain the same");
   });
 
@@ -149,8 +149,8 @@ contract('Multiple Launches', function(accounts) {
 
       let sum = bigInt(allowanceAfter).add(weiTransferred);
 
-      //assert.equal(allowance - diff, allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
-      assert.equal(user2BalanceAfter, user2Balance + (amountWei * sale2_rate), "The user should have gained amountWei*rate miniQSP");
+      //assert.equal(allowance - diff, allowanceAfter, "The crowdsale should have sent amountWei*rate miniAIG");
+      assert.equal(user2BalanceAfter, user2Balance + (amountWei * sale2_rate), "The user should have gained amountWei*rate miniAIG");
       assert.equal(sum.toNumber(), allowance, "The total tokens should remain the same");
   });
 

@@ -24,7 +24,7 @@ contract IntuitionToken is StandardToken, BurnableToken, Ownable {
     uint8   public constant decimals = 18;  // when there's 1 token per person you want these decimal places
     uint256 public constant INITIAL_SUPPLY      = 10000000000 * (10 ** uint256(decimals));
     uint256 public constant CROWDSALE_ALLOWANCE =  4500000000 * (10 ** uint256(decimals));
-    uint256 public constant ADMIN_ALLOWANCE     =  3500000000 * (10 ** uint256(decimals));
+    uint256 public constant ADMIN_ALLOWANCE     =  5500000000 * (10 ** uint256(decimals));
 
     // Properties
     uint256 public crowdSaleAllowance;      // the number of tokens available for crowdsales
@@ -148,7 +148,7 @@ contract IntuitionToken is StandardToken, BurnableToken, Ownable {
      * Overrides the burn function so that it cannot be called until after
      * transfers have been enabled.
      *
-     * @param _value    The amount of tokens to burn in mini-QSP
+     * @param _value    The amount of tokens to burn in mini-SIG
      */
     function burn(uint256 _value) public {
         require(transferEnabled || msg.sender == owner);

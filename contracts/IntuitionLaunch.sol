@@ -37,10 +37,10 @@ contract IntuitionLaunch is Pausable {
     // Refund amount, should it be required
     uint public refundAmount;
 
-    // The ratio of AIT to Ether
+    // The ratio of AIG to Ether
     uint public rate;
-    uint public constant LOW_RANGE_RATE = 5000;
-    uint public constant HIGH_RANGE_RATE = 10000;
+    uint public constant LOW_RANGE_RATE = 50000;
+    uint public constant HIGH_RANGE_RATE = 100000;
 
     // prevent certain functions from being recursively called
     bool private rentrancy_lock = false;
@@ -79,7 +79,7 @@ contract IntuitionLaunch is Pausable {
      * @param minimumContributionInWei      minimum contribution (in wei)
      * @param start                         the start time (UNIX timestamp)
      * @param durationInMinutes             the duration of the crowdsale in minutes
-     * @param rateQspToEther                the conversion rate from QSP to Ether
+     * @param rateToEther                   the conversion rate from AIG to Ether
      * @param addressOfTokenUsedAsReward    address of the token being sold
      */
     function IntuitionLaunch(
@@ -89,7 +89,7 @@ contract IntuitionLaunch is Pausable {
         uint minimumContributionInWei,
         uint start,
         uint durationInMinutes,
-        uint rateQspToEther,
+        uint rateToEther,
         address addressOfTokenUsedAsReward
     ) public {
         require(ifSuccessfulSendTo != address(0) && ifSuccessfulSendTo != address(this));
@@ -102,7 +102,7 @@ contract IntuitionLaunch is Pausable {
         minContribution = minimumContributionInWei;
         startTime = start;
         endTime = start + durationInMinutes * 1 minutes; // TODO double check
-        setRate(rateQspToEther);
+        setRate(rateToEther);
         tokenReward = IntuitionToken(addressOfTokenUsedAsReward);
     }
 
@@ -127,7 +127,7 @@ contract IntuitionLaunch is Pausable {
 
         // Compute the number of tokens to be rewarded to the sender
         // Note: it's important for this calculation that both wei
-        // and QSP have the same number of decimal places (18)
+        // and AIG have the same number of decimal places (18)
         uint numTokens = amount.mul(rate);
 
         // Transfer the tokens from the crowdsale supply to the sender
@@ -151,9 +151,9 @@ contract IntuitionLaunch is Pausable {
     }
 
     /**
-     * The owner can update the rate (QSP to ETH).
+     * The owner can update the rate (AIG to ETH).
      *
-     * @param _rate  the new rate for converting QSP to ETH
+     * @param _rate  the new rate for converting AIG to ETH
      */
     function setRate(uint _rate) public onlyOwner {
         require(_rate >= LOW_RANGE_RATE && _rate <= HIGH_RANGE_RATE);
@@ -165,16 +165,16 @@ contract IntuitionLaunch is Pausable {
      * crowdsale allowance to the recipient (_to).
      *
      * NOTE: be extremely careful to get the amounts correct, which
-     * are in units of wei and mini-QSP. Every digit counts.
+     * are in units of wei and mini-AIG. Every digit counts.
      *
      * @param _to            the recipient of the tokens
      * @param amountWei     the amount contributed in wei
-     * @param amountMiniQsp the amount of tokens transferred in mini-QSP
+     * @param amountMiniAig the amount of tokens transferred in mini-AIG
      */
-    function ownerAllocateTokens(address _to, uint amountWei, uint amountMiniQsp) external
+    function ownerAllocateTokens(address _to, uint amountWei, uint amountMiniAig) external
             onlyOwner nonReentrant
     {
-        if (!tokenReward.transferFrom(tokenReward.owner(), _to, amountMiniQsp)) {
+        if (!tokenReward.transferFrom(tokenReward.owner(), _to, amountMiniAig)) {
             revert();
         }
         balanceOf[_to] = balanceOf[_to].add(amountWei);
@@ -262,12 +262,12 @@ contract IntuitionLaunch is Pausable {
 
 
     /**
-     * Given an amount in QSP, this method returns the equivalent amount
-     * in mini-QSP.
+     * Given an amount in AIG, this method returns the equivalent amount
+     * in mini-AIG.
      *
-     * @param amount    an amount expressed in units of QSP
+     * @param amount    an amount expressed in units of amountMiniAIG
      */
-    function convertToMiniQsp(uint amount) internal constant returns (uint) {
+    function convertToMiniAig(uint amount) internal constant returns (uint) {
         return amount * (10 ** uint(tokenReward.decimals()));
     }
 }

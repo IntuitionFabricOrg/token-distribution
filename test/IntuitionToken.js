@@ -48,8 +48,8 @@ contract('IntuitionToken (Basic Tests)', function(accounts) {
   it("should have an initial owner balance of 1 billion tokens", async function() {
       let ownerBalance = (await token.balanceOf(owner)).toNumber();
 
-      // Note: 1 billion * 1 miniQSP => (10 ** 9) * (10 ** 18) = (10 ** 27)
-      assert.equal(ownerBalance, bigInt("1e27"), "the owner balance should initially be 1 billion tokens");
+      // Note: 10 billion * 1 miniAIG => (10 ** 10) * (10 ** 18) = (10 ** 28)
+      assert.equal(ownerBalance, bigInt("1e28"), "the owner balance should initially be 1 billion tokens");
   });
 
   it("should not allow a regular user to transfer before they are enabled", async function() {
@@ -63,7 +63,7 @@ contract('IntuitionToken (Basic Tests)', function(accounts) {
   });
 
   it("should allow the deployer (owner) of the token to make transfers", async function() {
-      await token.transfer(sale.address, 10 ** 26);
+      await token.transfer(sale.address, 10 ** 28);
       let ownerBalance = await token.balanceOf(owner);
       let saleBalance = await token.balanceOf(sale.address);
       let initialSupply = await token.INITIAL_SUPPLY();
@@ -73,8 +73,8 @@ contract('IntuitionToken (Basic Tests)', function(accounts) {
       initialSupply = initialSupply.toNumber();
       totalSupply = totalSupply.toNumber();
 
-      assert.equal(ownerBalance, bigInt("9e26"), "the owner should now have 90% of the original funds");
-      assert.equal(saleBalance, bigInt("1e26"), "the crowdSale should now have 10% of the original funds");
+      assert.equal(ownerBalance, bigInt("9e27"), "the owner should now have 90% of the original funds");
+      assert.equal(saleBalance, bigInt("1e27"), "the crowdSale should now have 10% of the original funds");
       assert.equal(totalSupply, initialSupply, "the total supply should equal the initial supply");
   });
 

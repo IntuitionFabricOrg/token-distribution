@@ -71,14 +71,14 @@ contract('IntuitionLaunch Constructor', function(accounts) {
     let minimumContributionInWei  = (await sale.minContribution()).toNumber();
     let start                     = (await sale.startTime()).toNumber();
     let end                       = (await sale.endTime()).toNumber();
-    let rateQspToEther            = (await sale.rate()).toNumber();
+    let rateToEther            = (await sale.rate()).toNumber();
 
     assert.equal(ifSuccessfulSendTo, beneficiary, "beneficiary address is incorrect");
     assert.equal(fundingGoalInEthers, 10 * (10 ** 18), "funding goal is incorrect");
     assert.equal(fundingCapInEthers, 20 * (10 ** 18), "funding cap is incorrect");
     assert.equal(minimumContributionInWei, 1, "minimum contribution in wei is incorrect");
     assert.equal(start + 120, end, "end time should be 120 seconds after start time");
-    assert.equal(rateQspToEther, 5000, "conversion rate from QSP to ETH is incorrect");
+    assert.equal(rateToEther, 50000, "conversion rate from AIG to ETH is incorrect");
   });
 
 });

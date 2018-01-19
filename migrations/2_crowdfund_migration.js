@@ -36,7 +36,7 @@ module.exports = function(deployer, network, accounts) {
     var monkey = 1234;
 
     deployer.deploy(IntuitionToken, accounts[1]).then(function() {
-        return deployer.deploy(IntuitionLaunch, accounts[1], 10, 20, 1, time, 2, 5000, IntuitionToken.address);
+        return deployer.deploy(IntuitionLaunch, accounts[1], 10, 20, 1, time, 2, 50000, IntuitionToken.address);
     });
 
 };

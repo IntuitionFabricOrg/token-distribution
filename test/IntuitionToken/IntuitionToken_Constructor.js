@@ -8,8 +8,8 @@ contract('Constructor', function(accounts) {
     var owner = accounts[0];
     var user1 = accounts[1];
 
-    var expectedCrowdSaleAllowance = bigInt("6.5e26");
-    var expectedAdminAllowance = bigInt("3.5e26");
+    var expectedCrowdSaleAllowance = bigInt("4.5e27");
+    var expectedAdminAllowance = bigInt("5.5e27");
 
     beforeEach(
         function() {
@@ -28,16 +28,16 @@ contract('Constructor', function(accounts) {
 
     it("should have the correct name, symbol, decimals, and constants", async function() {
         var name = await token.name();
-        assert.equal(name, "Intuition Token");
+        assert.equal(name, "Intuition");
 
         var symbol = await token.symbol();
-        assert.equal(symbol, "AIT");
+        assert.equal(symbol, "AIG");
 
         var decimals = (await token.decimals()).toNumber();
         assert.equal(decimals, 18);
 
         var initialSupply = (await token.INITIAL_SUPPLY()).toNumber();
-        assert.equal(initialSupply, bigInt("1e27"));
+        assert.equal(initialSupply, bigInt("10e27"));
 
         var crowdSaleAllowance = (await token.CROWDSALE_ALLOWANCE()).toNumber();
         assert.equal(crowdSaleAllowance, expectedCrowdSaleAllowance);

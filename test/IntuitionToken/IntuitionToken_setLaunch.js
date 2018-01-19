@@ -51,7 +51,7 @@ contract('IntuitionToken.setLaunch', function(accounts) {
     });
 
     // Note: I couldn't get it to perform comparisons of bigInt numbers, so used a small int
-    it("should provide the correct allowance of QSP for the crowdsale", async function() {
+    it("should provide the correct allowance of AIG for the crowdsale", async function() {
         let expectedCrowdSaleAllowance = 1;
         await token.setTokenLaunch(sale.address, expectedCrowdSaleAllowance);
 

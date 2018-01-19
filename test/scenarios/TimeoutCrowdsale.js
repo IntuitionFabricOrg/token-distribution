@@ -101,8 +101,8 @@ contract('Missed-deadline Crowdsale', function(accounts) {
       let user2BalanceAfter = (await token.balanceOf(user2)).toNumber();
       let ownerBalanceAfter = (await token.balanceOf(owner)).toNumber();
 
-      assert.equal(allowance - (amountWei * rate), allowanceAfter, "The crowdsale should have sent amountWei*rate miniQSP");
-      assert.equal(user2BalanceAfter, amountWei * rate, "The user should have gained amountWei*rate miniQSP");
+      assert.equal(allowance - (amountWei * rate), allowanceAfter, "The crowdsale should have sent amountWei*rate miniAIG");
+      assert.equal(user2BalanceAfter, amountWei * rate, "The user should have gained amountWei*rate miniAIG");
       assert.equal(allowanceAfter + user2BalanceAfter, allowance, "The total tokens should remain the same");
   });
 
