@@ -32,8 +32,8 @@ We use OpenZeppelin code for `SafeMath`, `Ownable`, `Burnable` and `StandardToke
 The token contract includes the following constants:
 
 ```javascript
-    name             = "Artificial Intuition Token";
-    symbol           = "AIT";
+    name             = "Intuition";
+    symbol           = "AIG";  // artificial intuition genesis
     decimals         = 18;
     INITIAL_SUPPLY   = 10 billion AIT
     CROWDlaunch_SUPPLY = 4500 million AIT
