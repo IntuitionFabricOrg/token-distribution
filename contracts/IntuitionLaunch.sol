@@ -91,7 +91,7 @@ contract IntuitionLaunch is Pausable {
         uint durationInMinutes,
         uint rateQspToEther,
         address addressOfTokenUsedAsReward
-    ) {
+    ) public {
         require(ifSuccessfulSendTo != address(0) && ifSuccessfulSendTo != address(this));
         require(addressOfTokenUsedAsReward != address(0) && addressOfTokenUsedAsReward != address(this));
         require(fundingGoalInEthers <= fundingCapInEthers);
@@ -256,7 +256,7 @@ contract IntuitionLaunch is Pausable {
      * Returns the current time.
      * Useful to abstract calls to "now" for tests.
     */
-    function currentTime() constant returns (uint _currentTime) {
+    function currentTime() public constant returns (uint _currentTime) {
         return now;
     }
 

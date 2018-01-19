@@ -63,7 +63,7 @@ contract IntuitionToken is StandardToken, BurnableToken, Ownable {
      * Constructor - instantiates token supply and allocates balanace of
      * to the owner (msg.sender).
      */
-    function IntuitionToken(address _admin) {
+    function IntuitionToken(address _admin) public {
         // the owner is a custodian of tokens that can
         // give an allowance of tokens for crowdsales
         // or to the admin, but cannot itself transfer
