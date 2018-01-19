@@ -1,5 +1,5 @@
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
-var QuantstampToken = artifacts.require("./QuantstampToken.sol");
+var IntuitionLaunch = artifacts.require("./IntuitionLaunch.sol");
+var IntuitionToken = artifacts.require("./IntuitionToken.sol");
 
 var bigInt = require("big-integer");
 
@@ -43,9 +43,9 @@ contract('Multiple Crowdsales', function(accounts) {
   var sale2;
 
   beforeEach(function() {
-    return QuantstampSale.deployed().then(function(instance) {
+    return IntuitionLaunch.deployed().then(function(instance) {
         sale = instance;
-        return QuantstampToken.deployed();
+        return IntuitionToken.deployed();
     }).then(function(instance2){
       token = instance2;
       return token.INITIAL_SUPPLY();
@@ -113,9 +113,9 @@ contract('Multiple Crowdsales', function(accounts) {
       assert.equal(beneficiaryEthBalance + saleEthBalance, beneficiaryBalanceAfter, "The beneficiary should have gained that amount of ether");
   });
 
-  it("the owner of QuantstampToken should now issue allowance to a new crowdsale", async function() {
+  it("the owner of IntuitionToken should now issue allowance to a new crowdsale", async function() {
       let time = new Date().getTime() / 1000;
-      sale2 = await QuantstampSale.new(accounts[1], 10, 20, 1, time, 2, 5000, token.address);
+      sale2 = await IntuitionLaunch.new(accounts[1], 10, 20, 1, time, 2, 5000, token.address);
       await token.setCrowdsale(sale2.address, 0); // ensures crowdsale has allowance of tokens
 
       let saleAllowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
