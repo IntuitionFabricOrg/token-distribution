@@ -8,10 +8,10 @@ This document gives an overview of the smart contracts used for the iFab token l
 
 The iFab token smart contract `IntuitionToken.sol` is ERC20-compatible and has the following additional characteristics:
 
-1. A fixed supply of pre-minted tokens
+1. A fixed supply of 10 billion tokens
 2. The ability to burn tokens by a user, removing the tokens from the supply
 3. During the token launch period, regular users cannot transfer tokens
-4. A crowdlaunch is given an allowance of tokens to be sold on behalf of the token owner
+4. A an allowance of 4.5 billion tokens to be distributed behalf to contributors 
 
 At the completion of the final token launch, iFab plans to do the following:
 
