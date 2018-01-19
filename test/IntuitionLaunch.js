@@ -21,7 +21,7 @@ contract('IntuitionLaunch constructor', function(accounts) {
 
   it("should be an allowance so that the crowdsale can transfer the tokens", async function() {
       let crowdSaleBalance = (await token.crowdSaleSupply()).toNumber();
-      await token.setCrowdsale(sale.address, crowdSaleBalance);
+      await token.setLaunch(sale.address, crowdSaleBalance);
       let allowance = (await token.allowance(owner, sale.address)).toNumber();
       assert.equal(allowance, crowdSaleBalance);
   });
@@ -73,7 +73,7 @@ contract('Multiple Crowdsales', function(accounts) {
 
   it("should accept 2 ether for the crowdfunding campaign", async function() {
       let crowdSaleAllowance = (await token.crowdSaleSupply()).toNumber();
-      await token.setCrowdsale(sale.address, crowdSaleAllowance); // ensures crowdsale has allowance of tokens
+      await token.setLaunch(sale.address, crowdSaleAllowance); // ensures crowdsale has allowance of tokens
       let tokenOwner = await token.owner();
 
       var amountEther = 2;

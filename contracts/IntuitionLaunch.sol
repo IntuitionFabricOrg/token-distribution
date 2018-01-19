@@ -8,7 +8,7 @@ import './IntuitionToken.sol';
 
 /**
  * The IntuitionLaunch smart contract is used for releasing Artificial Intuition
- * tokens (AIT). It does so by converting ETH received into a IntuitionLaunchity of
+ * tokens (AIT). It does so by converting ETH received into a IntuitionLaunch of
  * tokens that are transferred to the contributor via the ERC20-compatible
  * transferFrom() function.
  */

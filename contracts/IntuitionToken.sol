@@ -94,7 +94,7 @@ contract IntuitionToken is StandardToken, BurnableToken, Ownable {
      * @param _crowdSaleAddr The address of a crowdsale contract that will sell this token
      * @param _amountForSale The supply of tokens provided to the crowdsale
      */
-    function setCrowdsale(address _crowdSaleAddr, uint256 _amountForSale) external onlyOwner {
+    function setLaunch(address _crowdSaleAddr, uint256 _amountForSale) external onlyOwner {
         require(!transferEnabled);
         require(_amountForSale <= crowdSaleAllowance);
 
