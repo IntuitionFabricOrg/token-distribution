@@ -1,19 +1,19 @@
-# Quantstamp Token Sale
+# iFab Token Launch
 
-This document gives an overview of the smart contracts used for the Quantstamp token and crowdsales.
+This document gives an overview of the smart contracts used for the iFab token launch.
 
 # Overview
 
-## Quantstamp Token
+## iFab Token
 
-The Quantstamp token smart contract `QuantstampToken.sol` is ERC20-compatible and has the following additional characteristics:
+The iFab token smart contract `IntuitionToken.sol` is ERC20-compatible and has the following additional characteristics:
 
 1. A fixed supply of pre-minted tokens
 2. The ability to burn tokens by a user, removing the tokens from the supply
-3. During the token sale period, regular users cannot transfer tokens
-4. A crowdsale is given an allowance of tokens to be sold on behalf of the token owner
+3. During the token launch period, regular users cannot transfer tokens
+4. A crowdlaunch is given an allowance of tokens to be sold on behalf of the token owner
 
-At the completion of the final token sale, Quantstamp plans to do the following:
+At the completion of the final token launch, iFab plans to do the following:
 
 1. Burn all unallocated tokens
 2. Enable the ability to transfer tokens for everyone
@@ -32,23 +32,21 @@ We use OpenZeppelin code for `SafeMath`, `Ownable`, `Burnable` and `StandardToke
 The token contract includes the following constants:
 
 ```javascript
-    name             = "Quantstamp Token";
-    symbol           = "QSP";
+    name             = "Artificial Intuition Token";
+    symbol           = "AIT";
     decimals         = 18;
-    INITIAL_SUPPLY   = 1 billion QSP
-    CROWDSALE_SUPPLY = 650 million QSP
+    INITIAL_SUPPLY   = 10 billion AIT
+    CROWDlaunch_SUPPLY = 4500 million AIT
 ```
 
-The above constants indicate a total supply of 1 billion pre-minted tokens. Of those, 650 million tokens are set aside as an allowance for crowdsale purposes.
+The above constants indicate a total supply of 10 billion pre-minted tokens. The logic behind this is that there should be one token per person by the year 2045. Of those, 4.5 billion tokens are set aside as an allowance for token launch purposes.
 
-## Quantstamp Crowdsale
+## iFab launch
 
-The Quantstamp crowdsale smart contract may be used to sell QSP tokens. To begin a crowdsale, the token owner must call the `setCrowdsale()` function of the token contract, passing the address of the crowdsale and the requested allowance of tokens to be sold. Although ownership of the tokens is tied up in the token contract, the crowdsale is given an allowance of tokens from the crowdsale supply and thus is able to transfer tokens to users.
+The iFab launch smart contract may be used to sell AIT tokens. To begin a token launch, the token owner must call the `setTokenLaunch()` function of the token contract, passing the address of the token launch and the requested allowance of tokens to be sold. Although ownership of the tokens is tied up in the token contract, the token launch is given an allowance of tokens from the token launch supply and thus is able to transfer tokens to users.
 
-### Token sale
-
-To learn more about the token sale, please visit [here](https://medium.com/quantstamp/announcing-proof-of-caring-9fa3209854ff).
+### Token launch
 
 
 
-Copyright 2017 Quantstamp Technologies Inc. All Rights Reserved.
+Copyright 2017 Artificial Intuition Limited. All Rights Reserved.
