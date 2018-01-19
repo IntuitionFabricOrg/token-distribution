@@ -6,8 +6,8 @@ var BasicToken = artifacts.require("./token/BasicToken.sol");
 var StandardToken = artifacts.require("./token/StandardToken.sol");
 var Ownable = artifacts.require("./ownership/Ownable.sol");
 var Pausable = artifacts.require("./lifecycle/Pausable.sol");
-var QuantstampToken = artifacts.require("./QuantstampToken.sol");
-var QuantstampSale = artifacts.require("./QuantstampSale.sol");
+var IntuitionToken = artifacts.require("./IntuitionToken.sol");
+var IntuitionLaunch = artifacts.require("./IntuitionLaunch.sol");
 
 
 module.exports = function(deployer, network, accounts) {
@@ -25,18 +25,18 @@ module.exports = function(deployer, network, accounts) {
     deployer.deploy(StandardToken);
     deployer.link(StandardToken, BasicToken);
 
-    deployer.deploy(QuantstampToken);
-    deployer.link(QuantstampToken, StandardToken);
-    deployer.link(QuantstampToken, Ownable);
-    deployer.link(QuantstampToken, BurnableToken);
-    deployer.link(QuantstampToken, SafeMath);
+    deployer.deploy(IntuitionToken);
+    deployer.link(IntuitionToken, StandardToken);
+    deployer.link(IntuitionToken, Ownable);
+    deployer.link(IntuitionToken, BurnableToken);
+    deployer.link(IntuitionToken, SafeMath);
 
     var time = new Date().getTime() / 1000;
 
     var monkey = 1234;
 
-    deployer.deploy(QuantstampToken, accounts[1]).then(function() {
-        return deployer.deploy(QuantstampSale, accounts[1], 10, 20, 1, time, 2, 5000, QuantstampToken.address);
+    deployer.deploy(IntuitionToken, accounts[1]).then(function() {
+        return deployer.deploy(IntuitionLaunch, accounts[1], 10, 20, 1, time, 2, 5000, IntuitionToken.address);
     });
 
 };

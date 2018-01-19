@@ -49,4 +49,4 @@ The iFab launch smart contract may be used to sell AIT tokens. To begin a token 
 
 
 
-Copyright 2017 Artificial Intuition Limited. All Rights Reserved.
+Copyright 2018 Artificial Intuition Limited. All Rights Reserved.
