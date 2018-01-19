@@ -99,10 +99,10 @@ contract IntuitionToken is StandardToken, BurnableToken, Ownable {
         require(_amountForSale <= crowdSaleAllowance);
 
         // if 0, then full available crowdsale supply is assumed
-        uint amount = (_amountForSale == 0) ? crowdSaleAllowance : _amountForSale;
+        uint amount = (_amountForSale == 0) ? crowdSaleAllowance : _amountForSale; // questionable
 
         // Clear allowance of old, and set allowance of new
-        approve(crowdSaleAddr, 0);
+        approve(crowdSaleAddr, 0);  // one crowdsale at a time
         approve(_crowdSaleAddr, amount);
 
         crowdSaleAddr = _crowdSaleAddr;
@@ -115,8 +115,8 @@ contract IntuitionToken is StandardToken, BurnableToken, Ownable {
      */
     function enableTransfer() external onlyOwner {
         transferEnabled = true;
-        approve(crowdSaleAddr, 0);
-        approve(adminAddr, 0);
+        approve(crowdSaleAddr, 0);  // once enabled, no more distribution
+        approve(adminAddr, 0);      // no distribution by the admin?
         crowdSaleAllowance = 0;
         adminAllowance = 0;
     }

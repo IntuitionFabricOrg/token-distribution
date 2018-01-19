@@ -115,7 +115,7 @@ contract('Multiple Launches', function(accounts) {
 
   it("the owner of IntuitionToken should now issue allowance to a new crowdsale", async function() {
       let time = new Date().getTime() / 1000;
-      sale2 = await IntuitionLaunch.new(accounts[1], 10, 20, 1, time, 2, 5000, token.address);
+      sale2 = await IntuitionLaunch.new(accounts[1], 10, 20, 1, time, 2, 50000, token.address);
       await token.setTokenLaunch(sale2.address, 0); // ensures crowdsale has allowance of tokens
 
       let saleAllowance = (await token.allowance(tokenOwner, sale.address)).toNumber();
