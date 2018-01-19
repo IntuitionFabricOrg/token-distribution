@@ -21,7 +21,7 @@ contract('AIT-02: Capacity Constraint', function(accounts) {
   });
 
   it("crowdsale should stop accepting contributions when cap is reached", async function() {
-    await token.setTokenLaunch((sale.address, 0);
+    await token.setTokenLaunch(sale.address, 0);
     let capacity = (await sale.fundingCap()).toNumber();
 
     // this send should work since capacity is not yet reached,
