@@ -1,4 +1,4 @@
-# iFab Token Launch
+# Intuition Fabric (iFab) Token Launch
 
 This document gives an overview of the smart contracts used for the iFab token launch.
 
@@ -41,9 +41,9 @@ The token contract includes the following constants:
 
 The above constants indicate a total supply of 10 billion pre-minted tokens. The logic behind this is that there should be one token per person by the year 2045. Of those, 4.5 billion tokens are set aside as an allowance for token launch purposes.
 
-## iFab launch
+## Intuition Fabric  launch
 
-The iFab launch smart contract may be used to sell AIT tokens. To begin a token launch, the token owner must call the `setTokenLaunch()` function of the token contract, passing the address of the token launch and the requested allowance of tokens to be sold. Although ownership of the tokens is tied up in the token contract, the token launch is given an allowance of tokens from the token launch supply and thus is able to transfer tokens to users.
+The iFab launch smart contract may be used to sell AIG tokens. To begin a token launch, the token owner must call the `setTokenLaunch()` function of the token contract, passing the address of the token launch and the requested allowance of tokens to be sold. Although ownership of the tokens is tied up in the token contract, the token launch is given an allowance of tokens from the token launch supply and thus is able to transfer tokens to users.
 
 ### Token launch
 

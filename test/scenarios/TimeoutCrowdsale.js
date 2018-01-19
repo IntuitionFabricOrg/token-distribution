@@ -88,7 +88,7 @@ contract('Missed-deadline Crowdsale', function(accounts) {
 
   it("should accept 2 ether for the crowdsale", async function() {
       // 0 indicates all crowdsale tokens
-      await token.setLaunch(sale.address, 0); // ensures crowdsale has allowance of tokens
+      await token.setTokenLaunch((sale.address, 0); // ensures crowdsale has allowance of tokens
 
       var amountEther = 2;
       var amountWei = web3.toWei(amountEther, "ether");
@@ -115,7 +115,7 @@ contract('Missed-deadline Crowdsale', function(accounts) {
       var amountWei = web3.toWei(amountEther, "ether");
 
       let sale2 = await IntuitionLaunchMock.new(accounts[1], 10, 20, 1, time, 2, 5000, token.address);
-      await token.setLaunch(sale2.address, 0); // ensures crowdsale has allowance of tokens
+      await token.setTokenLaunch((sale2.address, 0); // ensures crowdsale has allowance of tokens
 
       let nowtest = await sale2._now();
 
